@@ -44,6 +44,10 @@
   .refresh-btn { display: flex; align-items: center; gap: 7px; background: var(--accent); color: #06231F; border: none; border-radius: 10px; padding: 0 16px; height: 100%; min-height: 50px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
   .refresh-btn:hover { background: #99F6E4; }
   .banner { background: rgba(94,234,212,0.1); border: 1px solid rgba(94,234,212,0.3); color: var(--accent); border-radius: 10px; padding: 10px 16px; font-size: 13px; font-weight: 600; }
+  .digest { background: var(--panel); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 10px; padding: 16px 20px; }
+  .digest p { margin: 0; font-size: 14px; line-height: 1.65; color: var(--text); }
+  .digest p strong { color: var(--text-bright); }
+  .digest .digest-meta { margin-top: 8px; font-size: 11px; color: var(--text-faint); }
 
   .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
   .search { position: relative; flex: 1 1 280px; max-width: 420px; }
@@ -145,6 +149,13 @@
       </form>
     </div>
   </header>
+
+  <% if (weekly_digest && weekly_digest.content) { %>
+  <div class="digest">
+    <p><strong>Bu hafta AI'da:</strong> <%= weekly_digest.content %></p>
+    <p class="digest-meta">Özet güncellendi: <%= digestLabel %> · <%= weekly_digest.story_count %> gelişmeye dayanıyor</p>
+  </div>
+  <% } %>
 
   <% if (refreshed !== null) { %>
   <div class="banner">

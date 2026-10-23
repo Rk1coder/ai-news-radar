@@ -66,6 +66,7 @@ app.get("/", async (req, res) => {
     qs: buildQs(current),
     formatDate,
     lastFetchedLabel: formatRelative(data.last_fetched_at),
+    digestLabel: data.weekly_digest ? formatRelative(data.weekly_digest.generated_at) : null,
   });
 });
 

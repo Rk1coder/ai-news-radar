@@ -1,10 +1,15 @@
+from datetime import UTC, datetime, timedelta
+
 from fastapi import FastAPI, Query
 from sqlalchemy import func
 
+from ai_news_radar.classification.digest import generate_weekly_digest
 from ai_news_radar.db import get_session, init_db
 from ai_news_radar.ingestion import default_connectors
-from ai_news_radar.models import Development, RawItem, Source
+from ai_news_radar.models import Development, RawItem, Source, WeeklyDigest
 from ai_news_radar.pipeline import run_pipeline
+
+DIGEST_MAX_AGE = timedelta(hours=24)
 
 app = FastAPI(title="AI News Radar API")
 init_db()
@@ -41,14 +46,42 @@ def _serialize(d: Development) -> dict:
     }
 
 
+def _latest_digest(session) -> WeeklyDigest | None:
+    return session.query(WeeklyDigest).order_by(WeeklyDigest.generated_at.desc()).first()
+
+
+def _get_or_refresh_digest(session, force: bool = False) -> WeeklyDigest:
+    existing = _latest_digest(session)
+    is_stale = existing is None or (
+        datetime.now(UTC) - existing.generated_at.replace(tzinfo=UTC) > DIGEST_MAX_AGE
+    )
+    if not force and existing is not None and not is_stale:
+        return existing
+
+    content, story_count = generate_weekly_digest(session)
+    digest = WeeklyDigest(content=content, story_count=story_count)
+    session.add(digest)
+    session.commit()
+    return digest
+
+
+def _serialize_digest(digest: WeeklyDigest) -> dict:
+    return {
+        "content": digest.content,
+        "story_count": digest.story_count,
+        "generated_at": digest.generated_at.isoformat(),
+    }
+
+
 @app.post("/api/refresh")
 def refresh():
     session = get_session()
     try:
         developments = run_pipeline(session, default_connectors())
+        digest = _get_or_refresh_digest(session, force=True)
     finally:
         session.close()
-    return {"refreshed": len(developments)}
+    return {"refreshed": len(developments), "weekly_digest": _serialize_digest(digest)}
 
 
 @app.get("/api/developments")
@@ -97,7 +130,10 @@ def list_developments(
             st: base_query.filter(Source.source_type == st).count() for st in distinct_source_types
         }
 
+        digest = _get_or_refresh_digest(session)
+
         return {
+            "weekly_digest": _serialize_digest(digest),
             "developments": [_serialize(d) for d in developments],
             "all_sectors": all_sectors,
             "source_type_counts": source_type_counts,

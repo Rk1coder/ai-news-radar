@@ -85,3 +85,14 @@ class Development(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
 
     raw_item: Mapped["RawItem"] = relationship(back_populates="development")
+
+
+class WeeklyDigest(Base):
+    """LLM ile uretilen, son 7 gunun en onemli gelismelerini ozetleyen metin."""
+
+    __tablename__ = "weekly_digests"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    content: Mapped[str] = mapped_column(Text)
+    story_count: Mapped[int] = mapped_column(default=0)
+    generated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)

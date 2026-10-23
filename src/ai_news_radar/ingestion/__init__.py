@@ -39,5 +39,30 @@ def default_connectors() -> list[Connector]:
         RssConnector(
             "import-ai", "https://importai.substack.com/feed", source_type="media", max_results=10
         ),
+        RssConnector(
+            "github-transformers",
+            "https://github.com/huggingface/transformers/releases.atom",
+            max_results=5,
+        ),
+        RssConnector(
+            "github-ollama", "https://github.com/ollama/ollama/releases.atom", max_results=5
+        ),
+        RssConnector(
+            "github-vllm", "https://github.com/vllm-project/vllm/releases.atom", max_results=5
+        ),
+        RssConnector(
+            "github-langchain",
+            "https://github.com/langchain-ai/langchain/releases.atom",
+            max_results=5,
+        ),
+        RssConnector(
+            "lesswrong", "https://www.lesswrong.com/feed.xml", source_type="social", max_results=10
+        ),
+        RssConnector(
+            "alignment-forum",
+            "https://www.alignmentforum.org/feed.xml",
+            source_type="social",
+            max_results=10,
+        ),
         HackerNewsConnector(),
     ]

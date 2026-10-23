@@ -1,13 +1,16 @@
 from datetime import UTC, datetime, timedelta
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, HTTPException, Query
+from pydantic import BaseModel
 from sqlalchemy import func
 
+from ai_news_radar.classification.chat import answer_question
 from ai_news_radar.classification.digest import generate_weekly_digest
 from ai_news_radar.db import get_session, init_db
 from ai_news_radar.ingestion import default_connectors
 from ai_news_radar.models import Development, RawItem, Source, WeeklyDigest
 from ai_news_radar.pipeline import run_pipeline
+from ai_news_radar.web.link_preview import fetch_link_preview
 
 DIGEST_MAX_AGE = timedelta(hours=24)
 
@@ -71,6 +74,51 @@ def _serialize_digest(digest: WeeklyDigest) -> dict:
         "story_count": digest.story_count,
         "generated_at": digest.generated_at.isoformat(),
     }
+
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
+class ChatRequest(BaseModel):
+    question: str
+    history: list[ChatMessage] = []
+
+
+def _get_development_or_404(session, dev_id: int) -> Development:
+    dev = session.get(Development, dev_id)
+    if dev is None:
+        raise HTTPException(status_code=404, detail="Gelişme bulunamadı")
+    return dev
+
+
+@app.get("/api/developments/{dev_id}/preview")
+def preview(dev_id: int):
+    session = get_session()
+    try:
+        dev = _get_development_or_404(session, dev_id)
+        meta = fetch_link_preview(dev.raw_item.url)
+        return {
+            "image": meta.get("image"),
+            "title": dev.title_tr or dev.raw_item.title,
+            "summary": dev.summary_tr or dev.classification_rationale or meta.get("description") or "",
+            "url": dev.raw_item.url,
+        }
+    finally:
+        session.close()
+
+
+@app.post("/api/developments/{dev_id}/chat")
+def chat(dev_id: int, payload: ChatRequest):
+    session = get_session()
+    try:
+        dev = _get_development_or_404(session, dev_id)
+        history = [{"role": m.role, "content": m.content} for m in payload.history]
+        answer = answer_question(dev, payload.question, history)
+        return {"answer": answer}
+    finally:
+        session.close()
 
 
 @app.post("/api/refresh")

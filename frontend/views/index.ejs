@@ -116,6 +116,34 @@
   .note-box p { margin: 0; font-size: 12px; line-height: 1.6; color: #FDE68A; }
   .rationale { margin: 10px 0 0; font-size: 12.5px; line-height: 1.6; color: var(--text-dim); font-style: italic; }
   .empty { padding: 48px 20px; text-align: center; color: var(--text-faint); border: 1px dashed var(--border); border-radius: 14px; }
+
+  .title-btn { background: none; border: none; padding: 0; margin: 0; text-align: left; font: inherit; color: var(--text-bright); cursor: pointer; font-weight: 600; font-size: 15px; line-height: 1.4; }
+  .title-btn:hover { text-decoration: underline; color: var(--accent); }
+  .ask-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--text-dim); background: #111A2C; border: 1px solid var(--border); border-radius: 7px; padding: 4px 9px; cursor: pointer; font-family: inherit; margin-top: 10px; }
+  .ask-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  dialog.modal { border: none; border-radius: 14px; padding: 0; background: var(--panel); color: var(--text); max-width: 560px; width: calc(100% - 32px); position: relative; }
+  dialog.modal::backdrop { background: rgba(2,6,15,0.7); }
+  .modal-inner { padding: 24px; display: flex; flex-direction: column; gap: 14px; max-height: 80vh; }
+  .modal-close { position: absolute; top: 10px; right: 12px; background: none; border: none; color: var(--text-faint); font-size: 22px; cursor: pointer; line-height: 1; padding: 4px; }
+  .modal-close:hover { color: var(--text-bright); }
+  #preview-image { width: 100%; border-radius: 10px; max-height: 220px; object-fit: cover; }
+  #preview-title, #chat-title { margin: 0; font-size: 17px; color: var(--text-bright); padding-right: 24px; }
+  #preview-summary { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--text-dim); }
+  .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .modal-link { background: var(--accent); color: #06231F; font-weight: 700; font-size: 13px; padding: 8px 14px; border-radius: 8px; }
+  .modal-link:hover { text-decoration: none; background: #99F6E4; }
+  .modal-ask-btn { background: none; border: 1px solid var(--border); color: var(--text-dim); font-size: 13px; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-family: inherit; }
+  .modal-ask-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .chat-messages { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: 50vh; padding-right: 4px; }
+  .chat-bubble { font-size: 13.5px; line-height: 1.55; padding: 10px 12px; border-radius: 10px; max-width: 85%; white-space: pre-wrap; }
+  .chat-bubble.user { align-self: flex-end; background: var(--accent); color: #06231F; }
+  .chat-bubble.assistant { align-self: flex-start; background: #111A2C; color: var(--text); border: 1px solid var(--border); }
+  .chat-bubble.loading { opacity: 0.6; font-style: italic; }
+  .chat-form { display: flex; gap: 8px; }
+  .chat-form input { flex: 1; background: #111A2C; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-family: inherit; font-size: 13px; }
+  .chat-form input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .chat-form button { background: var(--accent); color: #06231F; border: none; border-radius: 8px; padding: 0 16px; font-weight: 700; cursor: pointer; font-family: inherit; }
 </style>
 </head>
 <body>
@@ -248,7 +276,12 @@
       <% developments.forEach(function(d, idx) { %>
       <article class="card <%= idx === 0 ? 'selected' : '' %>">
         <div class="card-top">
-          <div class="card-main">
+          <div class="card-main" data-dev="<%= JSON.stringify({
+            id: d.id,
+            title: d.title_tr || d.raw_item.title,
+            summary: d.summary_tr || d.classification_rationale || '',
+            url: d.raw_item.url
+          }) %>">
             <div class="card-meta">
               <span class="src"><%= d.raw_item.source.name %></span>
               <span class="dot"></span>
@@ -265,7 +298,7 @@
               </span>
               <% } %>
             </div>
-            <h3><a href="<%= d.raw_item.url %>" target="_blank" rel="noopener noreferrer"><%= d.title_tr || d.raw_item.title %></a></h3>
+            <h3><button type="button" class="title-btn" data-action="preview"><%= d.title_tr || d.raw_item.title %></button></h3>
             <% if (d.title_tr && d.title_tr !== d.raw_item.title) { %>
             <div class="orig-text">EN: <%= d.raw_item.title %></div>
             <% } %>
@@ -274,6 +307,10 @@
               <% d.sector_tags.forEach(function(tag) { %><span class="tag"><%= tag %></span><% }) %>
             </div>
             <% } %>
+            <button type="button" class="ask-btn" data-action="chat">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              Sor
+            </button>
           </div>
           <div class="priority-col">
             <span class="p mono <%= !d.verified ? 'na' : '' %>"><%= d.verified ? d.priority_score : '—' %></span>
@@ -310,5 +347,127 @@
     </main>
   </div>
 </div>
+
+<dialog id="preview-modal" class="modal">
+  <div class="modal-inner">
+    <button type="button" class="modal-close" aria-label="Kapat" data-close>&times;</button>
+    <img id="preview-image" alt="" style="display:none">
+    <h2 id="preview-title"></h2>
+    <p id="preview-summary"></p>
+    <div class="modal-actions">
+      <a id="preview-link" href="#" target="_blank" rel="noopener noreferrer" class="modal-link">Habere git →</a>
+      <button type="button" class="modal-ask-btn" id="preview-ask-btn">Bu gelişme hakkında soru sor</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="chat-modal" class="modal">
+  <div class="modal-inner">
+    <button type="button" class="modal-close" aria-label="Kapat" data-close>&times;</button>
+    <h2 id="chat-title"></h2>
+    <div id="chat-messages" class="chat-messages" role="log" aria-live="polite"></div>
+    <form id="chat-form" class="chat-form">
+      <label for="chat-input" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Soru</label>
+      <input type="text" id="chat-input" placeholder="Bir soru sor..." autocomplete="off">
+      <button type="submit">Gönder</button>
+    </form>
+  </div>
+</dialog>
+
+<script>
+(function () {
+  var previewModal = document.getElementById('preview-modal');
+  var chatModal = document.getElementById('chat-modal');
+  var currentDevId = null;
+  var chatHistory = [];
+
+  function openPreview(dev) {
+    document.getElementById('preview-title').textContent = dev.title;
+    document.getElementById('preview-summary').textContent = dev.summary || 'Özet bulunamadı.';
+    document.getElementById('preview-link').href = dev.url;
+    var img = document.getElementById('preview-image');
+    img.style.display = 'none';
+    img.removeAttribute('src');
+    document.getElementById('preview-ask-btn').onclick = function () {
+      previewModal.close();
+      openChat(dev);
+    };
+    previewModal.showModal();
+
+    fetch('/developments/' + dev.id + '/preview')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (data && data.image) {
+          img.src = data.image;
+          img.style.display = 'block';
+        }
+      })
+      .catch(function () {});
+  }
+
+  function addMessage(role, text) {
+    var messagesEl = document.getElementById('chat-messages');
+    var bubble = document.createElement('div');
+    bubble.className = 'chat-bubble ' + role;
+    bubble.textContent = text;
+    messagesEl.appendChild(bubble);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return bubble;
+  }
+
+  function openChat(dev) {
+    currentDevId = dev.id;
+    chatHistory = [];
+    document.getElementById('chat-title').textContent = dev.title;
+    document.getElementById('chat-messages').innerHTML = '';
+    addMessage('assistant', 'Bu gelişme hakkında soru sorabilirsin - teknik detaylar, arka plan ya da etkileri hakkında.');
+    chatModal.showModal();
+    document.getElementById('chat-input').focus();
+  }
+
+  document.querySelectorAll('[data-dev]').forEach(function (el) {
+    var dev = JSON.parse(el.getAttribute('data-dev'));
+    var previewBtn = el.querySelector('[data-action="preview"]');
+    var chatBtn = el.querySelector('[data-action="chat"]');
+    if (previewBtn) previewBtn.addEventListener('click', function () { openPreview(dev); });
+    if (chatBtn) chatBtn.addEventListener('click', function () { openChat(dev); });
+  });
+
+  document.getElementById('chat-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var input = document.getElementById('chat-input');
+    var question = input.value.trim();
+    if (!question || currentDevId === null) return;
+    input.value = '';
+    addMessage('user', question);
+    var loadingBubble = addMessage('assistant', 'Yazıyor...');
+    loadingBubble.classList.add('loading');
+
+    fetch('/developments/' + currentDevId + '/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: question, history: chatHistory }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        loadingBubble.remove();
+        var answer = data.answer || data.error || 'Bir hata oluştu.';
+        addMessage('assistant', answer);
+        chatHistory.push({ role: 'user', content: question });
+        chatHistory.push({ role: 'assistant', content: answer });
+      })
+      .catch(function () {
+        loadingBubble.remove();
+        addMessage('assistant', 'Bağlantı hatası oluştu.');
+      });
+  });
+
+  document.querySelectorAll('[data-close]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      btn.closest('dialog').close();
+    });
+  });
+})();
+</script>
 </body>
 </html>

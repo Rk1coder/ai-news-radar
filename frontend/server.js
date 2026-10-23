@@ -7,6 +7,7 @@ const PORT = process.env.PORT || 3000;
 const app = express();
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
+app.use(express.json());
 
 function formatDate(iso) {
   if (!iso) return "—";
@@ -74,6 +75,29 @@ app.post("/refresh", async (req, res) => {
   const apiRes = await fetch(`${API_BASE}/api/refresh`, { method: "POST" });
   const data = apiRes.ok ? await apiRes.json() : { refreshed: 0 };
   res.redirect(`/?refreshed=${data.refreshed}`);
+});
+
+app.get("/developments/:id/preview", async (req, res) => {
+  const apiRes = await fetch(`${API_BASE}/api/developments/${req.params.id}/preview`);
+  if (!apiRes.ok) {
+    return res.status(apiRes.status).json({ error: "Önizleme alınamadı." });
+  }
+  res.json(await apiRes.json());
+});
+
+app.post("/developments/:id/chat", async (req, res) => {
+  const apiRes = await fetch(`${API_BASE}/api/developments/${req.params.id}/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      question: req.body.question,
+      history: req.body.history || [],
+    }),
+  });
+  if (!apiRes.ok) {
+    return res.status(apiRes.status).json({ error: "Yanıt alınamadı." });
+  }
+  res.json(await apiRes.json());
 });
 
 app.listen(PORT, () => {

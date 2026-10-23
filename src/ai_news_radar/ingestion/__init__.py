@@ -64,5 +64,39 @@ def default_connectors() -> list[Connector]:
             source_type="social",
             max_results=10,
         ),
+        RssConnector(
+            "github-llama-cpp", "https://github.com/ggml-org/llama.cpp/releases.atom", max_results=5
+        ),
+        RssConnector(
+            "github-llamaindex",
+            "https://github.com/run-llama/llama_index/releases.atom",
+            max_results=5,
+        ),
+        RssConnector(
+            "github-langgraph",
+            "https://github.com/langchain-ai/langgraph/releases.atom",
+            max_results=5,
+        ),
+        RssConnector(
+            "github-sd-webui",
+            "https://github.com/AUTOMATIC1111/stable-diffusion-webui/releases.atom",
+            max_results=5,
+        ),
+        RssConnector(
+            "bens-bites", "https://www.bensbites.com/feed.xml", source_type="media", max_results=10
+        ),
+        RssConnector(
+            "tldr-ai", "https://tldr.tech/api/rss/ai", source_type="media", max_results=10
+        ),
+        RssConnector(
+            "defensescoop-ai",
+            "https://defensescoop.com/tag/artificial-intelligence/feed/",
+            source_type="defense",
+        ),
+        RssConnector(
+            "c4isrnet-ai",
+            "https://www.c4isrnet.com/artificial-intelligence/feed/",
+            source_type="defense",
+        ),
         HackerNewsConnector(),
     ]

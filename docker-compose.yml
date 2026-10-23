@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: radar
+      POSTGRES_PASSWORD: radar
+      POSTGRES_DB: ai_news_radar
+    ports:
+      - "5432:5432"
+    volumes:
+      - radar_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U radar -d ai_news_radar"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+psycopg2://radar:radar@postgres.:5432/ai_news_radar
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      CLASSIFIER_MODEL: ${CLASSIFIER_MODEL:-claude-haiku-4-5}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+    ports:
+      - "8008:8008"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    environment:
+      API_BASE_URL: http://api.:8008
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  radar_pg_data:

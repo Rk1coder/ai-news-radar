@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI News Radar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #0A0F1A;
+    --panel: #0D1526;
+    --card: #0D1526;
+    --border: #1E293B;
+    --border-strong: #334155;
+    --text: #E2E8F0;
+    --text-bright: #F8FAFC;
+    --text-dim: #94A3B8;
+    --text-faint: #64748B;
+    --accent: #5EEAD4;
+    --blue: #60A5FA;
+    --orange: #FB923C;
+    --amber: #FBBF24;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { color: #99F6E4; text-decoration: underline; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  .wrap { max-width: 1360px; margin: 0 auto; padding: 28px clamp(16px, 4vw, 48px) 60px; display: flex; flex-direction: column; gap: 24px; }
+
+  header.top { display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+  .brand { display: flex; gap: 14px; align-items: center; }
+  .brand h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.01em; color: var(--text-bright); }
+  .brand p { margin: 0; font-size: 13px; color: var(--text-dim); }
+  .stats { display: flex; gap: 10px; flex-wrap: wrap; }
+  .stat { display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 8px 16px; min-width: 84px; }
+  .stat .n { font-size: 18px; font-weight: 600; color: var(--text-bright); }
+  .stat .n.verified { color: var(--accent); }
+  .stat .n.pending { color: var(--amber); }
+  .stat .l { font-size: 11px; color: var(--text-faint); }
+  .refresh-btn { display: flex; align-items: center; gap: 7px; background: var(--accent); color: #06231F; border: none; border-radius: 10px; padding: 0 16px; height: 100%; min-height: 50px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .refresh-btn:hover { background: #99F6E4; }
+  .banner { background: rgba(94,234,212,0.1); border: 1px solid rgba(94,234,212,0.3); color: var(--accent); border-radius: 10px; padding: 10px 16px; font-size: 13px; font-weight: 600; }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .search { position: relative; flex: 1 1 280px; max-width: 420px; }
+  .search svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+  .search input[type="text"] { width: 100%; background: var(--panel); border: 1px solid var(--border); border-radius: 9px; padding: 10px 14px 10px 38px; font-size: 14px; color: var(--text); font-family: inherit; }
+  .seg { display: flex; background: var(--panel); border: 1px solid var(--border); border-radius: 9px; padding: 3px; gap: 2px; }
+  .seg a { font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 7px; color: var(--text-faint); }
+  .seg a.active { background: var(--border); color: var(--text-bright); text-decoration: none; }
+  .seg a:hover { text-decoration: none; }
+  .check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-dim); padding: 6px 2px; }
+  .lang-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-dim); padding: 6px 10px; border-radius: 7px; border: 1px solid var(--border); background: var(--panel); cursor: pointer; }
+  #orig-toggle { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .orig-text { display: none; font-size: 12px; font-style: italic; color: var(--text-faint); margin-top: 2px; }
+  #orig-toggle:checked ~ .content .orig-text { display: block; }
+  #orig-toggle:checked ~ .toolbar .lang-toggle { border-color: var(--accent); color: var(--accent); }
+  .result-count { margin-left: auto; font-size: 13px; color: var(--text-faint); }
+  .num-filter { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-dim); }
+  .num-filter input { width: 64px; background: var(--panel); border: 1px solid var(--border); border-radius: 7px; padding: 6px 8px; color: var(--text); font-family: inherit; font-size: 13px; }
+  .hidden-carry { display: none; }
+  button.go { background: var(--border); color: var(--text-bright); border: none; border-radius: 7px; padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+  .content { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
+
+  aside.rail { flex: 0 0 240px; min-width: 200px; display: flex; flex-direction: column; gap: 16px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+  aside.rail h2 { margin: 0 0 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 16px; border: 1px solid var(--border); background: #111A2C; color: var(--text-dim); }
+  .chip:hover { text-decoration: none; border-color: var(--border-strong); }
+  .chip.active { border-color: var(--accent); background: rgba(94,234,212,0.12); color: var(--accent); }
+  .hr { height: 1px; background: var(--border); }
+  .facet-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 5px 2px; }
+  .facet-row a { color: var(--text-dim); }
+  .facet-row a.active { color: var(--accent); font-weight: 600; }
+  .facet-row .c { font-family: 'IBM Plex Mono', monospace; color: var(--text-faint); font-size: 12px; }
+  .pipeline-note { margin: 0; font-size: 12px; line-height: 1.6; color: var(--text-faint); }
+
+  main.list { flex: 999 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+  .card { display: block; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+  .card.selected { border-color: var(--accent); background: rgba(94,234,212,0.05); }
+  .card-top { display: flex; justify-content: space-between; gap: 16px; }
+  .card-main { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .card-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .src { font-size: 11px; font-weight: 600; letter-spacing: 0.03em; color: var(--text-faint); text-transform: uppercase; }
+  .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border-strong); }
+  .date { font-size: 11px; color: var(--text-faint); }
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; border-radius: 6px; padding: 2px 7px; }
+  .badge.verified { color: var(--accent); background: rgba(94,234,212,0.1); }
+  .badge.pending { color: var(--amber); background: rgba(251,191,36,0.1); }
+  .card h3 { margin: 0; font-size: 15px; font-weight: 600; color: var(--text-bright); line-height: 1.4; }
+  .card h3 a { color: var(--text-bright); }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 11px; color: var(--text-dim); background: #1A2439; border-radius: 6px; padding: 2px 8px; }
+  .priority-col { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; min-width: 56px; }
+  .priority-col .p { font-size: 22px; font-weight: 700; color: var(--accent); }
+  .priority-col .p.na { color: var(--text-faint); }
+  .priority-col .l { font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.04em; }
+  .bars { display: flex; gap: 18px; margin-top: 14px; flex-wrap: wrap; }
+  .bar-group { display: flex; flex-direction: column; gap: 4px; flex: 1 1 120px; }
+  .bar-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-faint); }
+  .bar-track { height: 5px; background: #1A2439; border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; }
+  .bar-fill.tech { background: var(--blue); }
+  .bar-fill.hype { background: var(--orange); }
+  .bar-fill.applic { background: var(--accent); }
+  .note-box { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.25); border-radius: 10px; padding: 10px 12px; display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; }
+  .note-box p { margin: 0; font-size: 12px; line-height: 1.6; color: #FDE68A; }
+  .rationale { margin: 10px 0 0; font-size: 12.5px; line-height: 1.6; color: var(--text-dim); font-style: italic; }
+  .empty { padding: 48px 20px; text-align: center; color: var(--text-faint); border: 1px dashed var(--border); border-radius: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <input type="checkbox" id="orig-toggle">
+
+  <header class="top">
+    <div class="brand">
+      <svg width="40" height="40" viewBox="0 0 44 44" aria-hidden="true">
+        <circle cx="22" cy="22" r="20" fill="none" stroke="#1E293B" stroke-width="2"></circle>
+        <circle cx="22" cy="22" r="13" fill="none" stroke="#1E293B" stroke-width="1.5"></circle>
+        <circle cx="22" cy="22" r="6" fill="none" stroke="#1E293B" stroke-width="1.5"></circle>
+        <path d="M22 22 L22 4 A18 18 0 0 1 38 14 Z" fill="#5EEAD4" opacity="0.28"></path>
+        <circle cx="22" cy="22" r="3" fill="#5EEAD4"></circle>
+      </svg>
+      <div>
+        <h1>AI News Radar</h1>
+        <p>Taranan, doğrulanan ve önceliklendirilen AI / ileri teknoloji gelişmeleri</p>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><span class="n"><%= total_count %></span><span class="l">toplam kayıt</span></div>
+      <div class="stat"><span class="n verified"><%= verified_count %></span><span class="l">doğrulandı</span></div>
+      <div class="stat"><span class="n pending"><%= pending_count %></span><span class="l">beklemede</span></div>
+      <form method="post" action="/refresh">
+        <button class="refresh-btn" type="submit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.3-6.4L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.3 6.4L3 16m0 5v-5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          Güncelle
+        </button>
+      </form>
+    </div>
+  </header>
+
+  <% if (refreshed !== null) { %>
+  <div class="banner">
+    <% if (refreshed > 0) { %><%= refreshed %> yeni gelişme eklendi.<% } else { %>Yeni gelişme bulunamadı, her şey güncel.<% } %>
+  </div>
+  <% } %>
+
+  <form class="toolbar" method="get" action="/">
+    <div class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" stroke="#64748B" stroke-width="2"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="#64748B" stroke-width="2" stroke-linecap="round"></line>
+      </svg>
+      <label for="q-input" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Başlık ara</label>
+      <input id="q-input" type="text" name="q" placeholder="Başlık ara..." value="<%= q %>">
+    </div>
+
+    <input class="hidden-carry" type="text" name="sector" value="<%= selected_sector %>">
+    <input class="hidden-carry" type="text" name="source_type" value="<%= selected_source_type %>">
+    <input class="hidden-carry" type="text" name="sort" value="<%= sort %>">
+    <% if (show_unverified) { %><input class="hidden-carry" type="checkbox" name="show_unverified" value="true" checked><% } %>
+
+    <label class="num-filter">
+      Min. öncelik
+      <input type="number" name="min_priority" value="<%= min_priority %>" min="0" max="100">
+    </label>
+
+    <button class="go" type="submit">Uygula</button>
+
+    <div class="seg" role="group" aria-label="Sıralama">
+      <a href="<%= qs({sort: 'priority'}) %>" class="<%= sort !== 'recent' ? 'active' : '' %>">Önceliğe göre</a>
+      <a href="<%= qs({sort: 'recent'}) %>" class="<%= sort === 'recent' ? 'active' : '' %>">En yeni</a>
+    </div>
+
+    <label class="check">
+      <input type="checkbox" name="show_unverified" value="true" onchange="this.form.submit()" <%= show_unverified ? 'checked' : '' %>>
+      Doğrulanamamışları da göster
+    </label>
+
+    <label class="lang-toggle" for="orig-toggle">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 8h10M9 5v1.5c0 4-2 7-5 9M7 10c1 2.5 3 4 6 5M14 20l4-9 4 9M15.3 17h5.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      Orijinal metinleri de göster
+    </label>
+
+    <span class="result-count"><%= developments.length %> / <%= total_count %> gelişme gösteriliyor</span>
+  </form>
+
+  <div class="content">
+    <aside class="rail">
+      <div>
+        <h2>Sektör</h2>
+        <div class="chips">
+          <a class="chip <%= !selected_sector ? 'active' : '' %>" href="<%= qs({sector: ''}) %>">Hepsi</a>
+          <% all_sectors.forEach(function(s) { %>
+          <a class="chip <%= s === selected_sector ? 'active' : '' %>" href="<%= qs({sector: s}) %>"><%= s %></a>
+          <% }) %>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div>
+        <h2>Kaynak türü</h2>
+        <div>
+          <div class="facet-row">
+            <a href="<%= qs({source_type: ''}) %>" class="<%= !selected_source_type ? 'active' : '' %>">Hepsi</a>
+          </div>
+          <% Object.entries(source_type_counts).forEach(function([st, count]) { %>
+          <div class="facet-row">
+            <a href="<%= qs({source_type: st}) %>" class="<%= st === selected_source_type ? 'active' : '' %>"><%= source_type_labels[st] || st %></a>
+            <span class="c"><%= count %></span>
+          </div>
+          <% }) %>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div>
+        <h2>Pipeline</h2>
+        <p class="pipeline-note">ingestion → verification → classification → DB. Beklemedeki kayıtlar çapraz doğrulama tamamlanana kadar önceliklendirmeye girmez.</p>
+      </div>
+    </aside>
+
+    <main class="list">
+      <% if (developments.length === 0) { %>
+        <div class="empty">Filtrelerle eşleşen gelişme bulunamadı.</div>
+      <% } %>
+
+      <% developments.forEach(function(d, idx) { %>
+      <article class="card <%= idx === 0 ? 'selected' : '' %>">
+        <div class="card-top">
+          <div class="card-main">
+            <div class="card-meta">
+              <span class="src"><%= d.raw_item.source.name %></span>
+              <span class="dot"></span>
+              <span class="date"><%= formatDate(d.raw_item.published_at) %></span>
+              <% if (d.verified) { %>
+              <span class="badge verified">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6 9 17l-5-5" stroke="#5EEAD4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                Doğrulandı
+              </span>
+              <% } else { %>
+              <span class="badge pending">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="#FBBF24" stroke-width="2"></circle><path d="M12 7v5l3 3" stroke="#FBBF24" stroke-width="2" stroke-linecap="round"></path></svg>
+                Çapraz doğrulama bekliyor
+              </span>
+              <% } %>
+            </div>
+            <h3><a href="<%= d.raw_item.url %>" target="_blank" rel="noopener noreferrer"><%= d.title_tr || d.raw_item.title %></a></h3>
+            <% if (d.title_tr && d.title_tr !== d.raw_item.title) { %>
+            <div class="orig-text">EN: <%= d.raw_item.title %></div>
+            <% } %>
+            <% if (d.sector_tags.length > 0) { %>
+            <div class="tags">
+              <% d.sector_tags.forEach(function(tag) { %><span class="tag"><%= tag %></span><% }) %>
+            </div>
+            <% } %>
+          </div>
+          <div class="priority-col">
+            <span class="p mono <%= !d.verified ? 'na' : '' %>"><%= d.verified ? d.priority_score : '—' %></span>
+            <span class="l">öncelik</span>
+          </div>
+        </div>
+
+        <% if (d.verified) { %>
+        <div class="bars">
+          <div class="bar-group">
+            <div class="bar-label"><span>Teknik etki</span><span class="mono"><%= d.technical_impact_score %></span></div>
+            <div class="bar-track"><div class="bar-fill tech" style="width: <%= d.technical_impact_score %>%"></div></div>
+          </div>
+          <div class="bar-group">
+            <div class="bar-label"><span>Hype</span><span class="mono"><%= d.hype_score %></span></div>
+            <div class="bar-track"><div class="bar-fill hype" style="width: <%= d.hype_score %>%"></div></div>
+          </div>
+          <div class="bar-group">
+            <div class="bar-label"><span>Uygulanabilirlik</span><span class="mono"><%= d.applicability_score %></span></div>
+            <div class="bar-track"><div class="bar-fill applic" style="width: <%= d.applicability_score %>%"></div></div>
+          </div>
+        </div>
+        <% if (d.classification_rationale) { %>
+        <p class="rationale"><%= d.classification_rationale %></p>
+        <% } %>
+        <% } else { %>
+        <div class="note-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="9" stroke="#FBBF24" stroke-width="2"></circle><path d="M12 7v5l3 3" stroke="#FBBF24" stroke-width="2" stroke-linecap="round"></path></svg>
+          <p><%= d.verification_notes %></p>
+        </div>
+        <% } %>
+      </article>
+      <% }) %>
+    </main>
+  </div>
+</div>
+</body>
+</html>

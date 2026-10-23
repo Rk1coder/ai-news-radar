@@ -86,10 +86,14 @@ def run_pipeline(
     """
     developments: list[Development] = []
     for connector in connectors:
-        for raw_item in ingest(session, connector):
-            development = process(session, raw_item)
-            developments.append(development)
-            if notifier is not None and development.verified:
-                notifier(development)
-    session.commit()
+        try:
+            for raw_item in ingest(session, connector):
+                development = process(session, raw_item)
+                developments.append(development)
+                if notifier is not None and development.verified:
+                    notifier(development)
+            session.commit()
+        except Exception as exc:  # noqa: BLE001 - bir kaynagin cokmesi digerlerini durdurmamali
+            session.rollback()
+            print(f"[{connector.source_name}] basarisiz, atlaniyor: {exc}")
     return developments

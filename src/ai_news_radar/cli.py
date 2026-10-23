@@ -1,5 +1,5 @@
 from ai_news_radar.db import get_session, init_db
-from ai_news_radar.ingestion.arxiv import ArxivConnector
+from ai_news_radar.ingestion import default_connectors
 from ai_news_radar.notifications.telegram import notify_telegram
 from ai_news_radar.pipeline import run_pipeline
 
@@ -8,8 +8,7 @@ def main() -> None:
     init_db()
     session = get_session()
     try:
-        connectors = [ArxivConnector()]
-        developments = run_pipeline(session, connectors, notifier=notify_telegram)
+        developments = run_pipeline(session, default_connectors(), notifier=notify_telegram)
         print(f"{len(developments)} yeni gelisme islendi.\n")
         for development in sorted(
             developments, key=lambda d: d.priority_score or -1, reverse=True

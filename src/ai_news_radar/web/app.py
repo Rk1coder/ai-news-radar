@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Query
 
 from ai_news_radar.db import get_session, init_db
-from ai_news_radar.ingestion.arxiv import ArxivConnector
+from ai_news_radar.ingestion import default_connectors
 from ai_news_radar.models import Development, RawItem, Source
 from ai_news_radar.pipeline import run_pipeline
 
@@ -43,7 +43,7 @@ def _serialize(d: Development) -> dict:
 def refresh():
     session = get_session()
     try:
-        developments = run_pipeline(session, [ArxivConnector()])
+        developments = run_pipeline(session, default_connectors())
     finally:
         session.close()
     return {"refreshed": len(developments)}

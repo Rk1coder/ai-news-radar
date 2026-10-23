@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Query
+from sqlalchemy import func
 
 from ai_news_radar.db import get_session, init_db
 from ai_news_radar.ingestion import default_connectors
@@ -69,6 +70,7 @@ def list_developments(
 
         total_count = base_query.count()
         verified_count = base_query.filter(Development.verified.is_(True)).count()
+        last_fetched_at = session.query(func.max(RawItem.fetched_at)).scalar()
 
         query = base_query
         if not show_unverified:
@@ -103,6 +105,7 @@ def list_developments(
             "total_count": total_count,
             "verified_count": verified_count,
             "pending_count": total_count - verified_count,
+            "last_fetched_at": last_fetched_at.isoformat() if last_fetched_at else None,
         }
     finally:
         session.close()

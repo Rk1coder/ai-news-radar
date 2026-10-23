@@ -17,9 +17,27 @@ def default_connectors() -> list[Connector]:
             "techcrunch-ai", "https://techcrunch.com/category/artificial-intelligence/feed/"
         ),
         RssConnector("mit-technology-review", "https://www.technologyreview.com/feed/"),
+        RssConnector("nvidia-blog", "https://blogs.nvidia.com/feed/"),
+        RssConnector("aws-ml-blog", "https://aws.amazon.com/blogs/machine-learning/feed/"),
+        RssConnector("google-ai-blog", "https://blog.google/innovation-and-ai/technology/ai/rss/"),
         RssConnector("ai-weekly", "https://aiweekly.co/rss/", source_type="media", max_results=10),
         RssConnector(
             "smol-ai-news", "https://news.smol.ai/rss.xml", source_type="media", max_results=10
+        ),
+        RssConnector(
+            "theverge-ai",
+            "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
+            source_type="media",
+        ),
+        RssConnector(
+            "arstechnica-ai", "https://arstechnica.com/ai/feed/", source_type="media"
+        ),
+        RssConnector(
+            "wired-ai", "https://www.wired.com/feed/tag/ai/latest/rss", source_type="media"
+        ),
+        RssConnector("the-decoder", "https://the-decoder.com/feed/", source_type="media"),
+        RssConnector(
+            "import-ai", "https://importai.substack.com/feed", source_type="media", max_results=10
         ),
         HackerNewsConnector(),
     ]

@@ -15,6 +15,18 @@ function formatDate(iso) {
   return `${pad(d.getUTCDate())}.${pad(d.getUTCMonth() + 1)}.${d.getUTCFullYear()}`;
 }
 
+function formatRelative(iso) {
+  if (!iso) return "bilinmiyor";
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const minutes = Math.floor(diffMs / 60000);
+  if (minutes < 1) return "az önce";
+  if (minutes < 60) return `${minutes} dakika önce`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} saat önce`;
+  const days = Math.floor(hours / 24);
+  return `${days} gün önce`;
+}
+
 function buildQs(current) {
   return function qs(overrides) {
     const params = { ...current, ...overrides };
@@ -53,6 +65,7 @@ app.get("/", async (req, res) => {
     refreshed: req.query.refreshed !== undefined ? Number(req.query.refreshed) : null,
     qs: buildQs(current),
     formatDate,
+    lastFetchedLabel: formatRelative(data.last_fetched_at),
   });
 });
 

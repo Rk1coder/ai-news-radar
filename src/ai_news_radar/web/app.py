@@ -11,6 +11,7 @@ init_db()
 SOURCE_TYPE_LABELS = {
     "academic": "Akademik",
     "company": "Şirket",
+    "media": "Medya",
     "defense": "Savunma Sanayii",
     "social": "Sosyal Medya",
 }

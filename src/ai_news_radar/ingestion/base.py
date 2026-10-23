@@ -1,6 +1,13 @@
+import re
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
+
+_TAG_RE = re.compile(r"<[^>]+>")
+
+
+def strip_html(text: str) -> str:
+    return _TAG_RE.sub(" ", text)
 
 
 @dataclass

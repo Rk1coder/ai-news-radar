@@ -1,17 +1,11 @@
-import re
 from datetime import datetime
 
 import feedparser
 import requests
 
-from ai_news_radar.ingestion.base import FetchedItem
+from ai_news_radar.ingestion.base import FetchedItem, strip_html
 
 USER_AGENT = "Mozilla/5.0 (compatible; ai-news-radar/0.1)"
-_TAG_RE = re.compile(r"<[^>]+>")
-
-
-def _strip_html(text: str) -> str:
-    return _TAG_RE.sub(" ", text)
 
 
 class RssConnector:
@@ -41,9 +35,9 @@ class RssConnector:
             items.append(
                 FetchedItem(
                     external_id=external_id,
-                    title=_strip_html(entry.title).strip().replace("\n", " "),
+                    title=strip_html(entry.title).strip().replace("\n", " "),
                     url=entry.link,
-                    summary=_strip_html(summary).strip().replace("\n", " "),
+                    summary=strip_html(summary).strip().replace("\n", " "),
                     published_at=published_at,
                 )
             )

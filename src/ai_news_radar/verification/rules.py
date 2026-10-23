@@ -5,6 +5,7 @@ from ai_news_radar.models import RawItem, Source
 SOURCE_TYPE_DEFAULTS = {
     "academic": {"credibility_weight": 0.9, "requires_cross_verification": False},
     "company": {"credibility_weight": 0.8, "requires_cross_verification": False},
+    "media": {"credibility_weight": 0.75, "requires_cross_verification": False},
     "defense": {"credibility_weight": 0.6, "requires_cross_verification": True},
     "social": {"credibility_weight": 0.3, "requires_cross_verification": True},
 }

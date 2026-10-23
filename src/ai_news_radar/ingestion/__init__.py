@@ -1,5 +1,6 @@
 from ai_news_radar.ingestion.arxiv import ArxivConnector
 from ai_news_radar.ingestion.base import Connector
+from ai_news_radar.ingestion.hackernews import HackerNewsConnector
 from ai_news_radar.ingestion.rss import RssConnector
 
 # Karar 1-A: aktif kaynaklar burada toplanir; cli ve web/app.py bu listeyi paylasir.
@@ -16,4 +17,9 @@ def default_connectors() -> list[Connector]:
             "techcrunch-ai", "https://techcrunch.com/category/artificial-intelligence/feed/"
         ),
         RssConnector("mit-technology-review", "https://www.technologyreview.com/feed/"),
+        RssConnector("ai-weekly", "https://aiweekly.co/rss/", source_type="media", max_results=10),
+        RssConnector(
+            "smol-ai-news", "https://news.smol.ai/rss.xml", source_type="media", max_results=10
+        ),
+        HackerNewsConnector(),
     ]

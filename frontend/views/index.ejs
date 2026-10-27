@@ -13,9 +13,12 @@
 <div class="page" id="page-content">
   <header class="topbar">
     <a class="brand wordmark" href="/" aria-label="Radar ana sayfa"><strong>RADAR</strong><span>AI NEWS DETECT &amp; BLOG</span></a>
-    <form action="/refresh" method="post" id="refresh-form"><button class="button subtle refresh" type="submit" aria-label="Haberleri güncelle"><%- icon('arrows-clockwise') %><span>Güncelle</span></button></form>
+    <div class="topbar-actions">
+      <form action="/refresh" method="post" id="refresh-form"><button class="button subtle refresh" type="submit" aria-label="Haberleri güncelle"><%- icon('arrows-clockwise') %><span>Güncelle</span></button></form>
+      <button class="button subtle" type="button" id="open-settings"><%- icon('sliders-horizontal') %><span>Ayarlar</span></button>
+    </div>
   </header>
-  <div class="status-line"><div id="scan-status" data-running="<%= scanLabels.running %>" data-status="<%= scanLabels.outcome %>" data-count="<%= scanLabels.newCount %>"><span><%= total_count %> kayıt · <%= scanLabels.status %></span><small><%= scanLabels.schedule %></small></div><button class="text-button" type="button" id="open-settings"><%- icon('sliders-horizontal') %> Ayarlar</button><button class="text-button open-assistant" type="button"><%- icon('sparkle') %> Radar Asistanı</button></div>
+  <div class="status-line"><div id="scan-status" data-running="<%= scanLabels.running %>" data-status="<%= scanLabels.outcome %>" data-count="<%= scanLabels.newCount %>"><span><%= total_count %> kayıt · <%= scanLabels.status %></span><small><%= scanLabels.schedule %></small></div><button class="text-button open-assistant" type="button"><%- icon('sparkle') %> Radar Asistanı</button></div>
   <div id="refresh-message" class="notice" role="status" hidden></div>
   <% if(typeof refreshStarted !== "undefined" && refreshStarted) { %><div class="notice" role="status">Tarama başladı. Yeni haberler hazır olduğunda otomatik görünecek.</div><% } %>
   <% if(refreshBusy) { %><div class="notice" role="status">Tarama zaten devam ediyor. Yeni haberler hazır olduğunda otomatik görünecek.</div><% } %>

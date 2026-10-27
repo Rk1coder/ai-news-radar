@@ -161,6 +161,12 @@ a .icon {
   justify-content: space-between;
   gap: 20px;
 }
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
 /* Live text wordmark: no background, icon, or raster image. */
 .brand { display: block; min-width: 0; }
 .wordmark { display: inline-flex; flex-direction: column; width: fit-content; color: var(--text); }
@@ -1461,11 +1467,16 @@ dialog::backdrop {
   .topbar {
     gap: 10px;
   }
-  .refresh {
+  .topbar-actions {
+    gap: 6px;
+  }
+  .refresh,
+  .topbar-actions #open-settings {
     padding: 9px;
     width: 44px;
   }
-  .refresh span {
+  .refresh span,
+  .topbar-actions #open-settings span {
     display: none;
   }
   .status-line {

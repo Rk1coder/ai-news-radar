@@ -1073,15 +1073,23 @@ dialog::backdrop {
   margin-top: 24px;
 }
 .settings-inner {
-  padding: 28px;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   max-height: 90dvh;
 }
 .settings-inner h2 {
   font-size: 28px;
-  margin: 0 0 20px;
+  margin: 0;
+  padding: 28px 28px 20px;
   font-family: var(--font-display);
   font-weight: 400;
+  flex-shrink: 0;
+}
+.settings-body {
+  overflow-y: auto;
+  padding: 0 28px 28px;
+  flex: 1;
+  min-height: 0;
 }
 .settings-section {
   padding: 20px 0;
@@ -1094,6 +1102,60 @@ dialog::backdrop {
 .settings-section h3 {
   font-size: 15px;
   margin: 0 0 12px;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+}
+.settings-row:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+.settings-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.row-label {
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.row-desc {
+  font-size: 12px;
+  color: var(--muted);
+}
+.badge-changed {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--peach);
+  color: var(--sienna);
+}
+.settings-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 28px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.settings-footer-actions {
+  display: flex;
+  gap: 8px;
 }
 .settings-field {
   display: block;

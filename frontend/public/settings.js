@@ -10,6 +10,7 @@
     social: "Sosyal Medya",
   };
   let data = null;
+  let pendingSources = new Map();
 
   async function api(url, options) {
     const response = await fetch(url, {
@@ -21,12 +22,38 @@
     return body;
   }
 
+  function findSource(name) {
+    return data.sources.find((s) => s.name === name);
+  }
+  function sourceEnabled(name) {
+    return pendingSources.has(name) ? pendingSources.get(name) : !!findSource(name)?.enabled;
+  }
+  function pendingInterval() {
+    const checked = document.querySelector(
+      '#scan-interval-group input[name="scan-interval"]:checked',
+    );
+    return Number(checked?.value ?? data.scan.interval_minutes ?? 15);
+  }
+  function scanDirty() {
+    return (
+      pendingInterval() !== data.scan.interval_minutes ||
+      $("auto-scan-enabled").checked !== !!data.scan.auto_scan_enabled
+    );
+  }
+  function sourcesDirty() {
+    return [...pendingSources.entries()].some(
+      ([name, enabled]) => enabled !== !!findSource(name)?.enabled,
+    );
+  }
+
   function renderScan() {
     const val = String(data.scan.interval_minutes ?? 15);
     document
       .querySelectorAll('#scan-interval-group input[name="scan-interval"]')
       .forEach((r) => (r.checked = r.value === val));
     $("auto-scan-enabled").checked = !!data.scan.auto_scan_enabled;
+    $("interval-changed").hidden = true;
+    $("auto-scan-changed").hidden = true;
   }
 
   function renderSources() {
@@ -45,10 +72,11 @@
         .map(
           ([type, items]) =>
             `<fieldset><legend>${sourceTypeLabels[type] || type}</legend>${items
-              .map(
-                (s) =>
-                  `<label class="source-row"><span>${s.name}</span><span class="switch"><input type="checkbox" data-source="${s.name}" ${s.enabled ? "checked" : ""}></span></label>`,
-              )
+              .map((s) => {
+                const enabled = sourceEnabled(s.name);
+                const changed = enabled !== !!s.enabled;
+                return `<label class="source-row"><span class="row-label">${s.name}${changed ? ' <span class="badge-changed">Değişti</span>' : ""}</span><span class="switch"><input type="checkbox" data-source="${s.name}" ${enabled ? "checked" : ""}></span></label>`;
+              })
               .join("")}</fieldset>`,
         )
         .join("") || `<p class="muted">Eşleşen kaynak yok.</p>`;
@@ -62,22 +90,33 @@
       : `<p class="muted">Henüz özel kaynak eklenmedi.</p>`;
   }
 
+  function updateFooter() {
+    const dirty = scanDirty() || sourcesDirty();
+    $("settings-footer").hidden = !dirty;
+    if (dirty) $("settings-footer-status").textContent = "Kaydedilmemiş değişiklikler var";
+    $("interval-changed").hidden = pendingInterval() === data.scan.interval_minutes;
+    $("auto-scan-changed").hidden =
+      $("auto-scan-enabled").checked === !!data.scan.auto_scan_enabled;
+  }
+
   function render() {
     renderScan();
     renderSources();
+    updateFooter();
   }
 
   async function load() {
     data = await api("/settings-api");
+    pendingSources = new Map();
     render();
   }
 
   function openSettings() {
     modal.showModal();
-    $("scan-save-status").textContent = "";
     $("custom-add-status").textContent = "";
     load().catch((e) => {
-      $("scan-save-status").textContent = e.message;
+      $("settings-footer-status").textContent = e.message;
+      $("settings-footer").hidden = false;
     });
   }
 
@@ -89,39 +128,52 @@
     if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) modal.close();
   });
 
-  $("save-scan").addEventListener("click", async () => {
-    $("scan-save-status").textContent = "Kaydediliyor…";
-    try {
-      const checked = document.querySelector(
-        '#scan-interval-group input[name="scan-interval"]:checked',
-      );
-      data = await api("/settings-api/scan", {
-        method: "PUT",
-        body: JSON.stringify({
-          interval_minutes: Number(checked?.value ?? 15),
-          auto_scan_enabled: $("auto-scan-enabled").checked,
-        }),
-      });
-      render();
-      $("scan-save-status").textContent = "Kaydedildi.";
-    } catch (e) {
-      $("scan-save-status").textContent = e.message;
-    }
+  $("scan-interval-group").addEventListener("change", () => {
+    $("interval-changed").hidden = pendingInterval() === data.scan.interval_minutes;
+    updateFooter();
   });
+  $("auto-scan-enabled").addEventListener("change", updateFooter);
 
   $("source-filter").addEventListener("input", renderSources);
 
-  $("source-list").addEventListener("change", async (e) => {
+  $("source-list").addEventListener("change", (e) => {
     const name = e.target.dataset.source;
     if (!name) return;
+    pendingSources.set(name, e.target.checked);
+    renderSources();
+    updateFooter();
+  });
+
+  $("settings-cancel").addEventListener("click", () => {
+    pendingSources = new Map();
+    render();
+  });
+
+  $("settings-save").addEventListener("click", async () => {
+    $("settings-footer-status").textContent = "Kaydediliyor…";
     try {
-      data = await api(`/settings-api/sources/${encodeURIComponent(name)}`, {
-        method: "PUT",
-        body: JSON.stringify({ enabled: e.target.checked }),
-      });
-      renderSources();
-    } catch {
-      e.target.checked = !e.target.checked;
+      if (scanDirty()) {
+        data = await api("/settings-api/scan", {
+          method: "PUT",
+          body: JSON.stringify({
+            interval_minutes: pendingInterval(),
+            auto_scan_enabled: $("auto-scan-enabled").checked,
+          }),
+        });
+      }
+      for (const [name, enabled] of pendingSources.entries()) {
+        if (enabled === !!findSource(name)?.enabled) continue;
+        data = await api(`/settings-api/sources/${encodeURIComponent(name)}`, {
+          method: "PUT",
+          body: JSON.stringify({ enabled }),
+        });
+      }
+      pendingSources = new Map();
+      render();
+      $("settings-footer-status").textContent = "Kaydedildi.";
+      $("settings-footer").hidden = true;
+    } catch (e) {
+      $("settings-footer-status").textContent = e.message;
     }
   });
 

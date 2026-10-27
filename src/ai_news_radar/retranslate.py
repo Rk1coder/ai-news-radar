@@ -1,7 +1,9 @@
 """Mevcut Development kayitlarinin title_tr/summary_tr alanlarini yeniden cevirir.
 
 Skorlari/etiketleri degistirmez - sadece ceviriyi yeniler (duzeltilmis Turkce
-yazim kurallarini uygulamak icin). Calistirma: python -m ai_news_radar.retranslate
+yazim kurallarini uygulamak icin).
+
+Calistirma: python -m ai_news_radar.retranslate [--from-id N] [--limit N]
 """
 
 import sys
@@ -12,11 +14,20 @@ from ai_news_radar.db import get_session
 from ai_news_radar.models import Development
 
 
+def _arg(flag: str) -> int | None:
+    if flag in sys.argv:
+        return int(sys.argv[sys.argv.index(flag) + 1])
+    return None
+
+
 def main() -> None:
-    limit = int(sys.argv[1]) if len(sys.argv) > 1 else None
+    from_id = _arg("--from-id")
+    limit = _arg("--limit")
     session = get_session()
     try:
         query = session.query(Development).order_by(Development.id)
+        if from_id is not None:
+            query = query.filter(Development.id >= from_id)
         developments = query.limit(limit).all() if limit else query.all()
         total = len(developments)
         print(f"{total} gelisme yeniden cevrilecek.\n")

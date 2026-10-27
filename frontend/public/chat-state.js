@@ -19,6 +19,7 @@
                 question: t.question.slice(0, 4000),
                 answer: typeof t.answer === "string" ? t.answer : "",
                 status: t.status === "done" ? "done" : "error",
+                ts: typeof t.ts === "number" ? t.ts : Date.now(),
                 error:
                   t.status === "pending"
                     ? "Yanıt yarıda kaldı. Yeniden deneyebilirsin."
@@ -68,6 +69,7 @@
         answer: "",
         status: "pending",
         error: "",
+        ts: Date.now(),
       });
       s.pending = true;
       s.pendingIndex = s.turns.length - 1;

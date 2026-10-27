@@ -149,6 +149,25 @@
     if (text !== undefined) el.textContent = text;
     return el;
   }
+  function formatTime(ts) {
+    return typeof ts === "number"
+      ? new Date(ts).toLocaleTimeString("tr-TR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "";
+  }
+  const scrollBottomBtn = $("scroll-bottom-btn");
+  function nearBottom() {
+    return scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 80;
+  }
+  function updateScrollBottomBtn() {
+    scrollBottomBtn.hidden = nearBottom();
+  }
+  scroll.addEventListener("scroll", updateScrollBottomBtn);
+  scrollBottomBtn.addEventListener("click", () => {
+    scroll.scrollTo({ top: scroll.scrollHeight, behavior: "smooth" });
+  });
   function renderConversation() {
     const dev = developments.get(activeId),
       session = activeId ? store.get(activeId) : null;
@@ -165,13 +184,26 @@
     messages.replaceChildren();
     (session?.turns || []).forEach((turn, index) => {
       const row = element("div", "chat-turn");
-      row.append(element("p", "user-message", turn.question));
-      const label = element("div", "answer-label");
+      const userRow = element("div", "msg-row user-row");
+      const userBubble = element("p", "user-message", turn.question);
+      userBubble.append(element("span", "msg-time", formatTime(turn.ts)));
+      userRow.append(userBubble, element("span", "avatar avatar-user", "Sen"));
+      row.append(userRow);
+      const botRow = element("div", "msg-row bot-row");
+      const avatarBot = element("span", "avatar avatar-bot");
       const logo = document.createElement("img");
       logo.src = "/radar.svg";
       logo.alt = "";
-      label.append(logo, document.createTextNode("Radar Asistanı"));
-      row.append(label);
+      avatarBot.append(logo);
+      const botCol = element("div", "bot-col");
+      const label = element("div", "answer-label");
+      label.append(
+        document.createTextNode("Radar Asistanı"),
+        element("span", "msg-time", formatTime(turn.ts)),
+      );
+      botCol.append(label);
+      botRow.append(avatarBot, botCol);
+      row.append(botRow);
       if (turn.status === "pending") {
         const loading = element(
           "div",
@@ -179,7 +211,7 @@
           "Haberin bağlamı inceleniyor…",
         );
         loading.setAttribute("role", "status");
-        row.append(loading);
+        botCol.append(loading);
       } else if (turn.status === "error") {
         const error = element("div", "chat-error", turn.error);
         error.setAttribute("role", "alert");
@@ -190,11 +222,11 @@
           retry.addEventListener("click", () => sendQuestion(null, index));
           error.append(document.createElement("br"), retry);
         }
-        row.append(error);
+        botCol.append(error);
       } else {
         const answer = element("div", "assistant-message");
         answerContent(answer, turn.answer);
-        row.append(answer);
+        botCol.append(answer);
       }
       messages.append(row);
     });
@@ -218,6 +250,7 @@
     sizeInput();
     requestAnimationFrame(() => {
       scroll.scrollTop = scroll.scrollHeight;
+      updateScrollBottomBtn();
     });
   }
   async function sendQuestion(question, retryIndex = null) {

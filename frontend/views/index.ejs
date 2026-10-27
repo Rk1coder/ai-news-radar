@@ -100,6 +100,7 @@
     <div id="chat-messages" role="log" aria-live="polite" aria-relevant="additions text" aria-label="Haber sohbeti"></div>
   </div>
   <div class="chat-bottom">
+    <button type="button" class="scroll-bottom-btn" id="scroll-bottom-btn" hidden aria-label="Son mesaja git"><%- icon('caret-down') %></button>
     <div class="suggestions" id="suggestions"><span>Bir soruyla başla</span><div><button type="button" data-question="Bu gelişmeyi kısaca özetler misin?">Kısaca özetle</button><button type="button" data-question="Bu gelişmenin teknik yeniliği ne?">Teknik yenilik ne?</button><button type="button" data-question="Bu gelişme kimler için önemli?">Kimler için önemli?</button></div></div>
     <form id="chat-form"><label class="sr-only" for="chat-input">Haber hakkında sorunuz</label><div class="composer"><textarea id="chat-input" rows="2" maxlength="4000" placeholder="Bu haber hakkında bir soru sor…" disabled></textarea><button class="send-button" id="send-chat" type="submit" aria-label="Soruyu gönder" disabled><%- icon('paper-plane-tilt') %></button></div><p class="composer-help"><%- icon('info') %><span>Yanıtlar seçili haberin bağlamına dayanır.</span></p></form>
   </div>

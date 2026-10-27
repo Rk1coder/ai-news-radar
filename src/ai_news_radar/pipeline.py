@@ -2,12 +2,18 @@ from collections.abc import Callable
 
 from sqlalchemy.orm import Session
 
-from ai_news_radar.classification.llm_classifier import classify
+from ai_news_radar.classification.llm_classifier import ClassificationResult, classify
 from ai_news_radar.ingestion.base import Connector
 from ai_news_radar.models import Development, RawItem, Source
+from ai_news_radar.notifications.telegram import enqueue as enqueue_telegram
 from ai_news_radar.verification.rules import SOURCE_TYPE_DEFAULTS, verify
 
 Notifier = Callable[[Development], None]
+# Karar 2/3: pipeline bu adimlarin SONUCUNA bagimli, belirli bir uygulamaya degil -
+# verification/rules.verify ve classification/llm_classifier.classify varsayilan,
+# ama testler/alternatif stratejiler bunlari degistirebilir (DIP).
+VerifyFn = Callable[[RawItem, Source], tuple[bool, str, str]]
+ClassifyFn = Callable[[str, str], ClassificationResult]
 
 
 def get_or_create_source(session: Session, connector: Connector) -> Source:
@@ -34,6 +40,8 @@ def ingest(session: Session, connector: Connector) -> list[RawItem]:
             .one_or_none()
         )
         if exists is not None:
+            if exists.published_at is None and fetched.published_at is not None:
+                exists.published_at = fetched.published_at
             continue
         raw_item = RawItem(
             source_id=source.id,
@@ -49,9 +57,13 @@ def ingest(session: Session, connector: Connector) -> list[RawItem]:
     return new_items
 
 
-def process(session: Session, raw_item: RawItem) -> Development | None:
+def process(
+    session: Session, raw_item: RawItem, *, verify_fn: VerifyFn | None = None, classify_fn: ClassifyFn | None = None
+) -> Development | None:
     """Karar 2 (dogrulama) + Karar 3 (siniflandirma), tek bir ham kayit icin."""
-    verified, method, notes = verify(raw_item, raw_item.source)
+    verify_fn = verify_fn or verify
+    classify_fn = classify_fn or classify
+    verified, method, notes = verify_fn(raw_item, raw_item.source)
 
     development = Development(
         raw_item_id=raw_item.id,
@@ -61,7 +73,7 @@ def process(session: Session, raw_item: RawItem) -> Development | None:
     )
 
     if verified:
-        result = classify(raw_item.title, raw_item.summary)
+        result = classify_fn(raw_item.title, raw_item.summary)
         development.technical_impact_score = result.technical_impact_score
         development.hype_score = result.hype_score
         development.applicability_score = result.applicability_score
@@ -77,7 +89,9 @@ def process(session: Session, raw_item: RawItem) -> Development | None:
 
 
 def run_pipeline(
-    session: Session, connectors: list[Connector], notifier: Notifier | None = None
+    session: Session, connectors: list[Connector], notifier: Notifier | None = None,
+    on_source_result: Callable[[str, bool], None] | None = None,
+    *, verify_fn: VerifyFn | None = None, classify_fn: ClassifyFn | None = None,
 ) -> list[Development]:
     """Karar 4-A: zamanlanmis, modular batch pipeline - toplama -> dogrulama -> siniflandirma.
 
@@ -85,15 +99,31 @@ def run_pipeline(
     cagrilir (ör. Telegram bildirimi) - cikti kanali pipeline'dan bagimsiz tutulur.
     """
     developments: list[Development] = []
+    # Sadece ozellestirilmisse iletilir: process()'i yama (patch) ile degistiren
+    # testler eski (session, raw_item) imzasini bekliyor.
+    process_kwargs = {}
+    if verify_fn is not None:
+        process_kwargs["verify_fn"] = verify_fn
+    if classify_fn is not None:
+        process_kwargs["classify_fn"] = classify_fn
     for connector in connectors:
+        source_developments = []
         try:
             for raw_item in ingest(session, connector):
-                development = process(session, raw_item)
-                developments.append(development)
-                if notifier is not None and development.verified:
-                    notifier(development)
+                development = process(session, raw_item, **process_kwargs)
+                source_developments.append(development)
+                enqueue_telegram(session, development)
             session.commit()
         except Exception as exc:  # noqa: BLE001 - bir kaynagin cokmesi digerlerini durdurmamali
             session.rollback()
-            print(f"[{connector.source_name}] basarisiz, atlaniyor: {exc}")
+            print(f"[{connector.source_name}] basarisiz, atlaniyor: {type(exc).__name__}")
+            if on_source_result:
+                on_source_result(connector.source_name, False)
+            continue
+        developments.extend(source_developments)
+        if on_source_result:
+            on_source_result(connector.source_name, True)
+        for development in source_developments:
+            if notifier is not None and development.verified:
+                notifier(development)
     return developments

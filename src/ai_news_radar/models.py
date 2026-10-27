@@ -96,3 +96,78 @@ class WeeklyDigest(Base):
     content: Mapped[str] = mapped_column(Text)
     story_count: Mapped[int] = mapped_column(default=0)
     generated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
+class ScanRun(Base):
+    """Durable scan history; a zero-result scan is still a completed check."""
+
+    __tablename__ = "scan_runs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    scheduled_for: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, index=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    status: Mapped[str] = mapped_column(String(30), default="running")
+    new_count: Mapped[int] = mapped_column(default=0)
+    successful_sources: Mapped[int] = mapped_column(default=0)
+    failed_sources: Mapped[list] = mapped_column(JSON, default=list)
+    digest_failed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class SchedulerHeartbeat(Base):
+    __tablename__ = "scheduler_heartbeat"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    seen_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
+class TelegramDelivery(Base):
+    """Destination-bound transactional outbox; a successful send is never replayed."""
+
+    __tablename__ = "telegram_deliveries"
+    __table_args__ = (UniqueConstraint("development_id", "chat_id", name="uq_telegram_development_chat"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    development_id: Mapped[int] = mapped_column(ForeignKey("developments.id"))
+    chat_id: Mapped[str] = mapped_column(String(200))
+    text: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
+    attempts: Mapped[int] = mapped_column(default=0)
+    next_attempt_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    message_id: Mapped[int | None] = mapped_column(nullable=True)
+    last_error: Mapped[str] = mapped_column(String(100), default="")
+
+
+class AppSettings(Base):
+    """Global uygulama ayarlari - tek satir (id=1), auth olmadigindan tek kullanicili."""
+
+    __tablename__ = "app_settings"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    scan_interval_minutes: Mapped[int | None] = mapped_column(nullable=True)  # None = config.py varsayilani
+    auto_scan_enabled: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+
+
+class SourceToggle(Base):
+    """Varsayilan bir connector'in kapatilmis oldugunu kaydeder - sadece KAPALI olanlar icin satir var."""
+
+    __tablename__ = "source_toggles"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    source_name: Mapped[str] = mapped_column(String(200), unique=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class CustomSource(Base):
+    """Kullanicinin elle ekledigi RSS/Atom kaynagi."""
+
+    __tablename__ = "custom_sources"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(200), unique=True)
+    feed_url: Mapped[str] = mapped_column(Text)
+    source_type: Mapped[str] = mapped_column(String(50))
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)

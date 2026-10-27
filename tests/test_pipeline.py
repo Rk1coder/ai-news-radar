@@ -110,3 +110,38 @@ def test_notifier_called_only_for_verified_developments(mock_classify):
 
     assert len(notified) == 1
     assert notified[0].raw_item.external_id == "abc-1"
+
+
+def test_rolled_back_source_does_not_report_phantom_developments():
+    class FailingSource(FakeSocialConnector):
+        def fetch(self):
+            return [
+                FetchedItem(external_id="one", title="First", url="https://example.com/one", summary="", published_at=None),
+                FetchedItem(external_id="two", title="Second", url="https://example.com/two", summary="", published_at=None),
+            ]
+
+    session = make_session()
+    results = []
+    from ai_news_radar.pipeline import process
+    def fail_second(session, raw):
+        if raw.external_id == "two":
+            raise RuntimeError("classification failed after first development")
+        return process(session, raw)
+    with patch("ai_news_radar.pipeline.process", side_effect=fail_second):
+        developments = run_pipeline(session, [FailingSource(), FakeSocialConnector()], on_source_result=lambda name, ok: results.append((name, ok)))
+    assert len(developments) == 1
+    assert developments[0].raw_item.external_id == "post-1"
+    assert results == [("fake-social", False), ("fake-social", True)]
+
+
+def test_existing_item_gets_missing_source_date_without_duplicate_processing():
+    from ai_news_radar.models import RawItem
+    from ai_news_radar.pipeline import ingest
+    session = make_session()
+    connector = FakeSocialConnector()
+    run_pipeline(session, [connector])
+    item = connector.fetch()[0]
+    item.published_at = datetime(2026, 10, 24, 23, 15)
+    with patch.object(connector, 'fetch', return_value=[item]):
+        assert ingest(session, connector) == []
+    assert session.query(RawItem).one().published_at == datetime(2026, 10, 24, 23, 15)

@@ -1,0 +1,6 @@
+📰 DeepSeek v4.1: İzleme Değerlendirmesi Düzeltmeleri
+
+llama.cpp projesinde DeepSeek v4.1 modeli için KV-cache yönetimi, matmul işlemleri, model parametreleri ve kod organizasyonuna yönelik bir dizi bakım ve optimizasyon düzeltmesi. macOS, Linux, Android, Windows ve openEuler platformlarında CPU, CUDA, ROCm, Vulkan, OpenVINO ve diğer arka uçlar için derlenmiş ikili…
+
+github llama cpp · 26.10.2026
+🔗 https://github.com/ggml-org/llama.cpp/releases/tag/b11890

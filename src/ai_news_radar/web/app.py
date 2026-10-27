@@ -1,18 +1,19 @@
-from datetime import UTC, datetime, timedelta
-
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import func
 
 from ai_news_radar.classification.chat import answer_question
-from ai_news_radar.classification.digest import generate_weekly_digest
 from ai_news_radar.db import get_session, init_db
-from ai_news_radar.ingestion import default_connectors
-from ai_news_radar.models import Development, RawItem, Source, WeeklyDigest
-from ai_news_radar.pipeline import run_pipeline
+from ai_news_radar.models import Development, WeeklyDigest
+from ai_news_radar.scans import request_scan, scan_status
+from ai_news_radar.web.developments_query import query_developments
 from ai_news_radar.web.link_preview import fetch_link_preview
-
-DIGEST_MAX_AGE = timedelta(hours=24)
+from ai_news_radar.web.settings_query import (
+    add_custom_source,
+    get_settings,
+    remove_custom_source,
+    set_source_enabled,
+    update_scan_settings,
+)
 
 app = FastAPI(title="AI News Radar API")
 init_db()
@@ -31,6 +32,7 @@ def _serialize(d: Development) -> dict:
     return {
         "id": d.id,
         "verified": d.verified,
+        "verification_method": d.verification_method,
         "verification_notes": d.verification_notes,
         "technical_impact_score": d.technical_impact_score,
         "hype_score": d.hype_score,
@@ -42,6 +44,7 @@ def _serialize(d: Development) -> dict:
         "summary_tr": d.summary_tr,
         "raw_item": {
             "title": raw.title,
+            "summary": raw.summary,
             "url": raw.url,
             "published_at": raw.published_at.isoformat() if raw.published_at else None,
             "source": {"name": raw.source.name, "source_type": raw.source.source_type},
@@ -51,21 +54,6 @@ def _serialize(d: Development) -> dict:
 
 def _latest_digest(session) -> WeeklyDigest | None:
     return session.query(WeeklyDigest).order_by(WeeklyDigest.generated_at.desc()).first()
-
-
-def _get_or_refresh_digest(session, force: bool = False) -> WeeklyDigest:
-    existing = _latest_digest(session)
-    is_stale = existing is None or (
-        datetime.now(UTC) - existing.generated_at.replace(tzinfo=UTC) > DIGEST_MAX_AGE
-    )
-    if not force and existing is not None and not is_stale:
-        return existing
-
-    content, story_count = generate_weekly_digest(session)
-    digest = WeeklyDigest(content=content, story_count=story_count)
-    session.add(digest)
-    session.commit()
-    return digest
 
 
 def _serialize_digest(digest: WeeklyDigest) -> dict:
@@ -86,6 +74,21 @@ class ChatRequest(BaseModel):
     history: list[ChatMessage] = []
 
 
+class ScanSettingsUpdate(BaseModel):
+    interval_minutes: int | None = None
+    auto_scan_enabled: bool | None = None
+
+
+class SourceToggleUpdate(BaseModel):
+    enabled: bool
+
+
+class CustomSourceCreate(BaseModel):
+    name: str
+    feed_url: str
+    source_type: str
+
+
 def _get_development_or_404(session, dev_id: int) -> Development:
     dev = session.get(Development, dev_id)
     if dev is None:
@@ -95,8 +98,7 @@ def _get_development_or_404(session, dev_id: int) -> Development:
 
 @app.get("/api/developments/{dev_id}/preview")
 def preview(dev_id: int):
-    session = get_session()
-    try:
+    with get_session() as session:
         dev = _get_development_or_404(session, dev_id)
         meta = fetch_link_preview(dev.raw_item.url)
         return {
@@ -105,31 +107,70 @@ def preview(dev_id: int):
             "summary": dev.summary_tr or dev.classification_rationale or meta.get("description") or "",
             "url": dev.raw_item.url,
         }
-    finally:
-        session.close()
 
 
 @app.post("/api/developments/{dev_id}/chat")
 def chat(dev_id: int, payload: ChatRequest):
-    session = get_session()
-    try:
+    with get_session() as session:
         dev = _get_development_or_404(session, dev_id)
         history = [{"role": m.role, "content": m.content} for m in payload.history]
         answer = answer_question(dev, payload.question, history)
         return {"answer": answer}
-    finally:
-        session.close()
 
 
-@app.post("/api/refresh")
+@app.post("/api/refresh", status_code=202)
 def refresh():
-    session = get_session()
     try:
-        developments = run_pipeline(session, default_connectors())
-        digest = _get_or_refresh_digest(session, force=True)
-    finally:
-        session.close()
-    return {"refreshed": len(developments), "weekly_digest": _serialize_digest(digest)}
+        result = request_scan(session_factory=get_session)
+    except (RuntimeError, TimeoutError):
+        raise HTTPException(status_code=503, detail="Tarama başlatılamadı")
+    if result is None:
+        raise HTTPException(status_code=409, detail="Bir tarama zaten devam ediyor")
+    return {"started": True, "scan": result}
+
+
+@app.get("/api/scan-status")
+def get_scan_status():
+    with get_session() as session:
+        return scan_status(session)
+
+
+@app.get("/api/settings")
+def get_settings_route():
+    with get_session() as session:
+        return get_settings(session)
+
+
+@app.put("/api/settings/scan")
+def update_scan_settings_route(payload: ScanSettingsUpdate):
+    with get_session() as session:
+        update_scan_settings(session, **payload.model_dump())
+        session.commit()
+        return get_settings(session)
+
+
+@app.put("/api/settings/sources/{source_name}")
+def toggle_source_route(source_name: str, payload: SourceToggleUpdate):
+    with get_session() as session:
+        set_source_enabled(session, source_name, payload.enabled)
+        session.commit()
+        return get_settings(session)
+
+
+@app.post("/api/settings/sources/custom", status_code=201)
+def add_custom_source_route(payload: CustomSourceCreate):
+    with get_session() as session:
+        add_custom_source(session, **payload.model_dump())
+        session.commit()
+        return get_settings(session)
+
+
+@app.delete("/api/settings/sources/custom/{source_id}")
+def remove_custom_source_route(source_id: int):
+    with get_session() as session:
+        remove_custom_source(session, source_id)
+        session.commit()
+        return get_settings(session)
 
 
 @app.get("/api/developments")
@@ -139,57 +180,27 @@ def list_developments(
     source_type: str = Query(default=""),
     min_priority: int = Query(default=0),
     show_unverified: bool = Query(default=False),
-    sort: str = Query(default="priority"),
+    sort: str = Query(default=""),
+    period: str = Query(default="all", pattern="^(today|week|all)$"),
 ):
-    session = get_session()
-    try:
-        base_query = (
-            session.query(Development)
-            .join(RawItem, Development.raw_item_id == RawItem.id)
-            .join(Source, RawItem.source_id == Source.id)
+    with get_session() as session:
+        result = query_developments(
+            session, q=q, sector=sector, source_type=source_type, min_priority=min_priority,
+            show_unverified=show_unverified, sort=sort, period=period,
         )
-
-        total_count = base_query.count()
-        verified_count = base_query.filter(Development.verified.is_(True)).count()
-        last_fetched_at = session.query(func.max(RawItem.fetched_at)).scalar()
-
-        query = base_query
-        if not show_unverified:
-            query = query.filter(Development.verified.is_(True))
-        if q:
-            query = query.filter(RawItem.title.ilike(f"%{q}%"))
-        if source_type:
-            query = query.filter(Source.source_type == source_type)
-        if min_priority:
-            query = query.filter(Development.priority_score >= min_priority)
-
-        if sort == "recent":
-            query = query.order_by(RawItem.published_at.desc().nullslast())
-        else:
-            query = query.order_by(Development.priority_score.desc().nullslast())
-
-        developments = query.all()
-        if sector:
-            developments = [d for d in developments if sector in (d.sector_tags or [])]
-
-        all_sectors = sorted({tag for d in base_query.all() for tag in (d.sector_tags or [])})
-        distinct_source_types = [row[0] for row in session.query(Source.source_type).distinct()]
-        source_type_counts = {
-            st: base_query.filter(Source.source_type == st).count() for st in distinct_source_types
-        }
-
-        digest = _get_or_refresh_digest(session)
+        digest = _latest_digest(session)
+        last_fetched_at = result["last_fetched_at"]
 
         return {
-            "weekly_digest": _serialize_digest(digest),
-            "developments": [_serialize(d) for d in developments],
-            "all_sectors": all_sectors,
-            "source_type_counts": source_type_counts,
+            "weekly_digest": _serialize_digest(digest) if digest else None,
+            "scan_status": scan_status(session),
+            "developments": [_serialize(d) for d in result["developments"]],
+            "search": result["search"],
+            "all_sectors": result["all_sectors"],
+            "source_type_counts": result["source_type_counts"],
             "source_type_labels": SOURCE_TYPE_LABELS,
-            "total_count": total_count,
-            "verified_count": verified_count,
-            "pending_count": total_count - verified_count,
+            "total_count": result["total_count"],
+            "verified_count": result["verified_count"],
+            "pending_count": result["pending_count"],
             "last_fetched_at": last_fetched_at.isoformat() if last_fetched_at else None,
         }
-    finally:
-        session.close()

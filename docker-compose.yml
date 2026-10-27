@@ -1,6 +1,7 @@
 services:
   postgres:
     image: postgres:16
+    restart: unless-stopped
     environment:
       POSTGRES_USER: radar
       POSTGRES_PASSWORD: radar
@@ -17,20 +18,53 @@ services:
 
   api:
     build: .
+    restart: unless-stopped
     environment:
       DATABASE_URL: postgresql+psycopg2://radar:radar@postgres.:5432/ai_news_radar
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       CLASSIFIER_MODEL: ${CLASSIFIER_MODEL:-claude-haiku-4-5}
+      TELEGRAM_ENABLED: ${TELEGRAM_ENABLED:-false}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      AUTO_SCAN_ENABLED: ${AUTO_SCAN_ENABLED:-true}
+      SCAN_TIMEZONE: ${SCAN_TIMEZONE:-Europe/Istanbul}
+      SCAN_HOURS: ${SCAN_HOURS:-6,10,14,18,22}
+      SCAN_INTERVAL_MINUTES: ${SCAN_INTERVAL_MINUTES:-15}
     ports:
       - "8008:8008"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8008/api/scan-status', timeout=5)"]
+      interval: 10s
+      timeout: 6s
+      retries: 12
     depends_on:
       postgres:
         condition: service_healthy
 
+  scheduler:
+    build: .
+    command: ["python", "-m", "ai_news_radar.scheduler"]
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg2://radar:radar@postgres.:5432/ai_news_radar
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      CLASSIFIER_MODEL: ${CLASSIFIER_MODEL:-claude-haiku-4-5}
+      TELEGRAM_ENABLED: ${TELEGRAM_ENABLED:-false}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      AUTO_SCAN_ENABLED: ${AUTO_SCAN_ENABLED:-true}
+      SCAN_TIMEZONE: ${SCAN_TIMEZONE:-Europe/Istanbul}
+      SCAN_HOURS: ${SCAN_HOURS:-6,10,14,18,22}
+      SCAN_INTERVAL_MINUTES: ${SCAN_INTERVAL_MINUTES:-15}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+
   frontend:
     build: ./frontend
+    restart: unless-stopped
     environment:
       API_BASE_URL: http://api.:8008
       PORT: 3000

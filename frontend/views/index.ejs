@@ -1,473 +1,157 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI News Radar</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<style>
-  :root {
-    --bg: #0A0F1A;
-    --panel: #0D1526;
-    --card: #0D1526;
-    --border: #1E293B;
-    --border-strong: #334155;
-    --text: #E2E8F0;
-    --text-bright: #F8FAFC;
-    --text-dim: #94A3B8;
-    --text-faint: #64748B;
-    --accent: #5EEAD4;
-    --blue: #60A5FA;
-    --orange: #FB923C;
-    --amber: #FBBF24;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; }
-  a { color: var(--accent); text-decoration: none; }
-  a:hover { color: #99F6E4; text-decoration: underline; }
-  .mono { font-family: 'IBM Plex Mono', monospace; }
-  .wrap { max-width: 1360px; margin: 0 auto; padding: 28px clamp(16px, 4vw, 48px) 60px; display: flex; flex-direction: column; gap: 24px; }
-
-  header.top { display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
-  .brand { display: flex; gap: 14px; align-items: center; }
-  .brand h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.01em; color: var(--text-bright); }
-  .brand p { margin: 0; font-size: 13px; color: var(--text-dim); }
-  .brand p.tracked { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--accent); }
-  .tracked-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px rgba(94,234,212,0.18); }
-  .stats { display: flex; gap: 10px; flex-wrap: wrap; }
-  .stat { display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 8px 16px; min-width: 84px; }
-  .stat .n { font-size: 18px; font-weight: 600; color: var(--text-bright); }
-  .stat .n.verified { color: var(--accent); }
-  .stat .n.pending { color: var(--amber); }
-  .stat .l { font-size: 11px; color: var(--text-faint); }
-  .refresh-btn { display: flex; align-items: center; gap: 7px; background: var(--accent); color: #06231F; border: none; border-radius: 10px; padding: 0 16px; height: 100%; min-height: 50px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
-  .refresh-btn:hover { background: #99F6E4; }
-  .banner { background: rgba(94,234,212,0.1); border: 1px solid rgba(94,234,212,0.3); color: var(--accent); border-radius: 10px; padding: 10px 16px; font-size: 13px; font-weight: 600; }
-  .digest { background: var(--panel); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 10px; padding: 16px 20px; }
-  .digest p { margin: 0; font-size: 14px; line-height: 1.65; color: var(--text); }
-  .digest p strong { color: var(--text-bright); }
-  .digest .digest-meta { margin-top: 8px; font-size: 11px; color: var(--text-faint); }
-
-  .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-  .search { position: relative; flex: 1 1 280px; max-width: 420px; }
-  .search svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; }
-  .search input[type="text"] { width: 100%; background: var(--panel); border: 1px solid var(--border); border-radius: 9px; padding: 10px 14px 10px 38px; font-size: 14px; color: var(--text); font-family: inherit; }
-  .seg { display: flex; background: var(--panel); border: 1px solid var(--border); border-radius: 9px; padding: 3px; gap: 2px; }
-  .seg a { font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 7px; color: var(--text-faint); }
-  .seg a.active { background: var(--border); color: var(--text-bright); text-decoration: none; }
-  .seg a:hover { text-decoration: none; }
-  .check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-dim); padding: 6px 2px; }
-  .lang-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-dim); padding: 6px 10px; border-radius: 7px; border: 1px solid var(--border); background: var(--panel); cursor: pointer; }
-  #orig-toggle { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-  .orig-text { display: none; font-size: 12px; font-style: italic; color: var(--text-faint); margin-top: 2px; }
-  #orig-toggle:checked ~ .content .orig-text { display: block; }
-  #orig-toggle:checked ~ .toolbar .lang-toggle { border-color: var(--accent); color: var(--accent); }
-  .result-count { margin-left: auto; font-size: 13px; color: var(--text-faint); }
-  .num-filter { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-dim); }
-  .num-filter input { width: 64px; background: var(--panel); border: 1px solid var(--border); border-radius: 7px; padding: 6px 8px; color: var(--text); font-family: inherit; font-size: 13px; }
-  .hidden-carry { display: none; }
-  button.go { background: var(--border); color: var(--text-bright); border: none; border-radius: 7px; padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; }
-
-  .content { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
-
-  aside.rail { flex: 0 0 240px; min-width: 200px; display: flex; flex-direction: column; gap: 16px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
-  aside.rail h2 { margin: 0 0 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip { font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 16px; border: 1px solid var(--border); background: #111A2C; color: var(--text-dim); }
-  .chip:hover { text-decoration: none; border-color: var(--border-strong); }
-  .chip.active { border-color: var(--accent); background: rgba(94,234,212,0.12); color: var(--accent); }
-  .hr { height: 1px; background: var(--border); }
-  .facet-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 5px 2px; }
-  .facet-row a { color: var(--text-dim); }
-  .facet-row a.active { color: var(--accent); font-weight: 600; }
-  .facet-row .c { font-family: 'IBM Plex Mono', monospace; color: var(--text-faint); font-size: 12px; }
-  .pipeline-note { margin: 0; font-size: 12px; line-height: 1.6; color: var(--text-faint); }
-
-  main.list { flex: 999 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
-  .card { display: block; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
-  .card.selected { border-color: var(--accent); background: rgba(94,234,212,0.05); }
-  .card-top { display: flex; justify-content: space-between; gap: 16px; }
-  .card-main { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-  .card-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .src { font-size: 11px; font-weight: 600; letter-spacing: 0.03em; color: var(--text-faint); text-transform: uppercase; }
-  .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border-strong); }
-  .date { font-size: 11px; color: var(--text-faint); }
-  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; border-radius: 6px; padding: 2px 7px; }
-  .badge.verified { color: var(--accent); background: rgba(94,234,212,0.1); }
-  .badge.pending { color: var(--amber); background: rgba(251,191,36,0.1); }
-  .card h3 { margin: 0; font-size: 15px; font-weight: 600; color: var(--text-bright); line-height: 1.4; }
-  .card h3 a { color: var(--text-bright); }
-  .tags { display: flex; gap: 6px; flex-wrap: wrap; }
-  .tag { font-size: 11px; color: var(--text-dim); background: #1A2439; border-radius: 6px; padding: 2px 8px; }
-  .priority-col { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; min-width: 56px; }
-  .priority-col .p { font-size: 22px; font-weight: 700; color: var(--accent); }
-  .priority-col .p.na { color: var(--text-faint); }
-  .priority-col .l { font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.04em; }
-  .bars { display: flex; gap: 18px; margin-top: 14px; flex-wrap: wrap; }
-  .bar-group { display: flex; flex-direction: column; gap: 4px; flex: 1 1 120px; }
-  .bar-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-faint); }
-  .bar-track { height: 5px; background: #1A2439; border-radius: 3px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 3px; }
-  .bar-fill.tech { background: var(--blue); }
-  .bar-fill.hype { background: var(--orange); }
-  .bar-fill.applic { background: var(--accent); }
-  .note-box { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.25); border-radius: 10px; padding: 10px 12px; display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; }
-  .note-box p { margin: 0; font-size: 12px; line-height: 1.6; color: #FDE68A; }
-  .rationale { margin: 10px 0 0; font-size: 12.5px; line-height: 1.6; color: var(--text-dim); font-style: italic; }
-  .empty { padding: 48px 20px; text-align: center; color: var(--text-faint); border: 1px dashed var(--border); border-radius: 14px; }
-
-  .title-btn { background: none; border: none; padding: 0; margin: 0; text-align: left; font: inherit; color: var(--text-bright); cursor: pointer; font-weight: 600; font-size: 15px; line-height: 1.4; }
-  .title-btn:hover { text-decoration: underline; color: var(--accent); }
-  .ask-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--text-dim); background: #111A2C; border: 1px solid var(--border); border-radius: 7px; padding: 4px 9px; cursor: pointer; font-family: inherit; margin-top: 10px; }
-  .ask-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-  dialog.modal { border: none; border-radius: 14px; padding: 0; background: var(--panel); color: var(--text); max-width: 560px; width: calc(100% - 32px); position: relative; }
-  dialog.modal::backdrop { background: rgba(2,6,15,0.7); }
-  .modal-inner { padding: 24px; display: flex; flex-direction: column; gap: 14px; max-height: 80vh; }
-  .modal-close { position: absolute; top: 10px; right: 12px; background: none; border: none; color: var(--text-faint); font-size: 22px; cursor: pointer; line-height: 1; padding: 4px; }
-  .modal-close:hover { color: var(--text-bright); }
-  #preview-image { width: 100%; border-radius: 10px; max-height: 220px; object-fit: cover; }
-  #preview-title, #chat-title { margin: 0; font-size: 17px; color: var(--text-bright); padding-right: 24px; }
-  #preview-summary { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--text-dim); }
-  .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-  .modal-link { background: var(--accent); color: #06231F; font-weight: 700; font-size: 13px; padding: 8px 14px; border-radius: 8px; }
-  .modal-link:hover { text-decoration: none; background: #99F6E4; }
-  .modal-ask-btn { background: none; border: 1px solid var(--border); color: var(--text-dim); font-size: 13px; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-family: inherit; }
-  .modal-ask-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .chat-messages { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: 50vh; padding-right: 4px; }
-  .chat-bubble { font-size: 13.5px; line-height: 1.55; padding: 10px 12px; border-radius: 10px; max-width: 85%; white-space: pre-wrap; }
-  .chat-bubble.user { align-self: flex-end; background: var(--accent); color: #06231F; }
-  .chat-bubble.assistant { align-self: flex-start; background: #111A2C; color: var(--text); border: 1px solid var(--border); }
-  .chat-bubble.loading { opacity: 0.6; font-style: italic; }
-  .chat-form { display: flex; gap: 8px; }
-  .chat-form input { flex: 1; background: #111A2C; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-family: inherit; font-size: 13px; }
-  .chat-form input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .chat-form button { background: var(--accent); color: #06231F; border: none; border-radius: 8px; padding: 0 16px; font-weight: 700; cursor: pointer; font-family: inherit; }
-</style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#ffffff"><title>Radar · Gelişmeleri keşfet</title>
+<link rel="icon" href="/radar-favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;800&family=Source+Serif+4:opsz,wght@8..60,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css"><script defer src="/chat-state.js"></script><script defer src="/live-feed.js"></script><script defer src="/app.js"></script><script defer src="/settings.js"></script>
 </head>
 <body>
-<div class="wrap">
-  <input type="checkbox" id="orig-toggle">
-
-  <header class="top">
-    <div class="brand">
-      <svg width="40" height="40" viewBox="0 0 44 44" aria-hidden="true">
-        <circle cx="22" cy="22" r="20" fill="none" stroke="#1E293B" stroke-width="2"></circle>
-        <circle cx="22" cy="22" r="13" fill="none" stroke="#1E293B" stroke-width="1.5"></circle>
-        <circle cx="22" cy="22" r="6" fill="none" stroke="#1E293B" stroke-width="1.5"></circle>
-        <path d="M22 22 L22 4 A18 18 0 0 1 38 14 Z" fill="#5EEAD4" opacity="0.28"></path>
-        <circle cx="22" cy="22" r="3" fill="#5EEAD4"></circle>
-      </svg>
-      <div>
-        <h1>AI News Radar</h1>
-        <p>Taranan, doğrulanan ve önceliklendirilen AI / ileri teknoloji gelişmeleri</p>
-        <p class="tracked"><span class="tracked-dot"></span><%= total_count %> HABER TAKİP EDİLİYOR · GÜNCELLENDİ: <%= lastFetchedLabel.toUpperCase() %></p>
-      </div>
-    </div>
-    <div class="stats">
-      <div class="stat"><span class="n"><%= total_count %></span><span class="l">toplam kayıt</span></div>
-      <div class="stat"><span class="n verified"><%= verified_count %></span><span class="l">doğrulandı</span></div>
-      <div class="stat"><span class="n pending"><%= pending_count %></span><span class="l">beklemede</span></div>
-      <form method="post" action="/refresh">
-        <button class="refresh-btn" type="submit">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.3-6.4L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.3 6.4L3 16m0 5v-5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-          Güncelle
-        </button>
-      </form>
-    </div>
+<a class="skip-link" href="#news-list">Haberlere geç</a>
+<div class="page" id="page-content">
+  <header class="topbar">
+    <a class="brand wordmark" href="/" aria-label="Radar ana sayfa"><strong>RADAR</strong><span>AI NEWS DETECT &amp; BLOG</span></a>
+    <form action="/refresh" method="post" id="refresh-form"><button class="button subtle refresh" type="submit" aria-label="Haberleri güncelle"><%- icon('arrows-clockwise') %><span>Güncelle</span></button></form>
   </header>
-
-  <% if (weekly_digest && weekly_digest.content) { %>
-  <div class="digest">
-    <p><strong>Bu hafta AI'da:</strong> <%= weekly_digest.content %></p>
-    <p class="digest-meta">Özet güncellendi: <%= digestLabel %> · <%= weekly_digest.story_count %> gelişmeye dayanıyor</p>
-  </div>
+  <div class="status-line"><div id="scan-status" data-running="<%= scanLabels.running %>" data-status="<%= scanLabels.outcome %>" data-count="<%= scanLabels.newCount %>"><span><%= total_count %> kayıt · <%= scanLabels.status %></span><small><%= scanLabels.schedule %></small></div><button class="text-button" type="button" id="open-settings"><%- icon('sliders-horizontal') %> Ayarlar</button><button class="text-button open-assistant" type="button"><%- icon('sparkle') %> Radar Asistanı</button></div>
+  <div id="refresh-message" class="notice" role="status" hidden></div>
+  <% if(typeof refreshStarted !== "undefined" && refreshStarted) { %><div class="notice" role="status">Tarama başladı. Yeni haberler hazır olduğunda otomatik görünecek.</div><% } %>
+  <% if(refreshBusy) { %><div class="notice" role="status">Tarama zaten devam ediyor. Yeni haberler hazır olduğunda otomatik görünecek.</div><% } %>
+  <% if(refreshError) { %><div class="notice error" role="alert">Haberler güncellenemedi. Son kayıtlar gösteriliyor. Güncelle düğmesiyle yeniden deneyebilirsin.</div><% } %>
+  <% if(refreshed !== null && !refreshError) { %><div class="notice" role="status"><%= refreshed > 0 ? `${refreshed} yeni gelişme eklendi.` : 'Tarama tamamlandı. Yeni gelişme bulunamadı.' %></div><% } %>
+  <div id="digest-region">
+  <% if(weekly_digest && weekly_digest.content) { %>
+  <details class="briefing">
+    <summary><span class="brief-icon"><%- icon('newspaper') %></span><span class="brief-text"><strong>Radar özeti <span class="brief-label">SON 7 GÜNDE TARANAN</span></strong><span class="brief-excerpt"><%= weekly_digest.content %></span></span><%- icon('caret-down') %></summary>
+    <div class="brief-full"><p><%= weekly_digest.content %></p><span class="muted"><%= weekly_digest.story_count %> gelişmeden oluşturuldu · <%= digestLabel %> · Yayın tarihleri farklı olabilir.</span></div>
+  </details>
   <% } %>
-
-  <% if (refreshed !== null) { %>
-  <div class="banner">
-    <% if (refreshed > 0) { %><%= refreshed %> yeni gelişme eklendi.<% } else { %>Yeni gelişme bulunamadı, her şey güncel.<% } %>
   </div>
-  <% } %>
-
-  <form class="toolbar" method="get" action="/">
-    <div class="search">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <circle cx="11" cy="11" r="7" stroke="#64748B" stroke-width="2"></circle>
-        <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="#64748B" stroke-width="2" stroke-linecap="round"></line>
-      </svg>
-      <label for="q-input" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Başlık ara</label>
-      <input id="q-input" type="text" name="q" placeholder="Başlık ara..." value="<%= q %>">
+  <form method="get" action="/" class="filters-form" id="filters-form">
+    <input type="hidden" name="period" value="<%= period %>">
+    <nav class="period-tabs" aria-label="Haber dönemi"><% [['all','Son haberler'],['today','Bugün'],['week','Son 7 gün']].forEach(([value,label])=>{ %><a href="<%= qs({period:value}) %>" <%- period===value?'aria-current="page"':'' %>><%= label %></a><% }) %></nav>
+    <div class="toolbar">
+      <div class="search"><label class="sr-only" for="q-input">Haberlerde ara</label><%- icon('magnifying-glass') %><input id="q-input" type="search" name="q" aria-describedby="search-help" placeholder="Konu veya anahtar kelime ara…" value="<%= q %>"><button type="submit" class="icon-button" aria-label="Ara"><%- icon('arrow-right') %></button></div>
+      <button class="button subtle" type="button" id="filter-toggle" aria-expanded="false" aria-controls="filter-fields"><%- icon('sliders-horizontal') %><span>Filtreler</span><% if(sector||source_type||min_priority||show_unverified){ %><span class="filter-dot" aria-label="Etkin filtre var"></span><% } %></button>
+      <label class="sort-label"><span class="sr-only">Sıralama</span><select name="sort" id="sort-select"><option value="relevance" <%= sort==='relevance'?'selected':'' %>><%= q ? 'İlgi düzeyine göre' : 'Önerilen' %></option><option value="priority" <%= sort==='priority'?'selected':'' %>>Önceliğe göre</option><option value="recent" <%= sort==='recent'?'selected':'' %>>En yeni</option></select></label>
     </div>
-
-    <input class="hidden-carry" type="text" name="sector" value="<%= selected_sector %>">
-    <input class="hidden-carry" type="text" name="source_type" value="<%= selected_source_type %>">
-    <input class="hidden-carry" type="text" name="sort" value="<%= sort %>">
-    <% if (show_unverified) { %><input class="hidden-carry" type="checkbox" name="show_unverified" value="true" checked><% } %>
-
-    <label class="num-filter">
-      Min. öncelik
-      <input type="number" name="min_priority" value="<%= min_priority %>" min="0" max="100">
-    </label>
-
-    <button class="go" type="submit">Uygula</button>
-
-    <div class="seg" role="group" aria-label="Sıralama">
-      <a href="<%= qs({sort: 'priority'}) %>" class="<%= sort !== 'recent' ? 'active' : '' %>">Önceliğe göre</a>
-      <a href="<%= qs({sort: 'recent'}) %>" class="<%= sort === 'recent' ? 'active' : '' %>">En yeni</a>
-    </div>
-
-    <label class="check">
-      <input type="checkbox" name="show_unverified" value="true" onchange="this.form.submit()" <%= show_unverified ? 'checked' : '' %>>
-      Doğrulanamamışları da göster
-    </label>
-
-    <label class="lang-toggle" for="orig-toggle">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 8h10M9 5v1.5c0 4-2 7-5 9M7 10c1 2.5 3 4 6 5M14 20l4-9 4 9M15.3 17h5.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-      Orijinal metinleri de göster
-    </label>
-
-    <span class="result-count"><%= developments.length %> / <%= total_count %> gelişme gösteriliyor</span>
+    <p id="search-help" class="muted">Başlık, özet ve konularda ara · Türkçe ve İngilizce konu eşleştirmesi</p>
+    <fieldset id="filter-fields" class="filter-fields" hidden><legend class="sr-only">Haber filtreleri</legend>
+      <label>Sektör<select name="sector"><option value="">Tüm sektörler</option><% all_sectors.forEach(s=>{ %><option value="<%= s %>" <%= sector===s?'selected':'' %>><%= sectorLabel(s) %></option><% }) %></select></label>
+      <label>Kaynak türü<select name="source_type"><option value="">Tüm kaynaklar</option><% Object.entries(source_type_labels).forEach(([key,label])=>{ %><option value="<%= key %>" <%= source_type===key?'selected':'' %>><%= label %></option><% }) %></select></label>
+      <label>En düşük öncelik (0–100)<input type="number" name="min_priority" value="<%= min_priority %>" min="0" max="100"></label>
+      <label class="checkbox"><input type="checkbox" name="show_unverified" value="true" <%= show_unverified?'checked':'' %>> Teyit bekleyenleri de göster</label>
+      <div class="filter-actions"><a href="/" class="text-link">Tümünü temizle</a><button class="button primary" type="submit">Filtreleri uygula</button></div>
+    </fieldset>
   </form>
-
-  <div class="content">
-    <aside class="rail">
-      <div>
-        <h2>Sektör</h2>
-        <div class="chips">
-          <a class="chip <%= !selected_sector ? 'active' : '' %>" href="<%= qs({sector: ''}) %>">Hepsi</a>
-          <% all_sectors.forEach(function(s) { %>
-          <a class="chip <%= s === selected_sector ? 'active' : '' %>" href="<%= qs({sector: s}) %>"><%= s %></a>
-          <% }) %>
-        </div>
-      </div>
-
-      <div class="hr"></div>
-
-      <div>
-        <h2>Kaynak türü</h2>
-        <div>
-          <div class="facet-row">
-            <a href="<%= qs({source_type: ''}) %>" class="<%= !selected_source_type ? 'active' : '' %>">Hepsi</a>
-          </div>
-          <% Object.entries(source_type_counts).forEach(function([st, count]) { %>
-          <div class="facet-row">
-            <a href="<%= qs({source_type: st}) %>" class="<%= st === selected_source_type ? 'active' : '' %>"><%= source_type_labels[st] || st %></a>
-            <span class="c"><%= count %></span>
-          </div>
-          <% }) %>
-        </div>
-      </div>
-
-      <div class="hr"></div>
-
-      <div>
-        <h2>Pipeline</h2>
-        <p class="pipeline-note">ingestion → verification → classification → DB. Beklemedeki kayıtlar çapraz doğrulama tamamlanana kadar önceliklendirmeye girmez.</p>
-      </div>
-    </aside>
-
-    <main class="list">
-      <% if (developments.length === 0) { %>
-        <div class="empty">Filtrelerle eşleşen gelişme bulunamadı.</div>
-      <% } %>
-
-      <% developments.forEach(function(d, idx) { %>
-      <article class="card <%= idx === 0 ? 'selected' : '' %>">
-        <div class="card-top">
-          <div class="card-main" data-dev="<%= JSON.stringify({
-            id: d.id,
-            title: d.title_tr || d.raw_item.title,
-            summary: d.summary_tr || d.classification_rationale || '',
-            url: d.raw_item.url
-          }) %>">
-            <div class="card-meta">
-              <span class="src"><%= d.raw_item.source.name %></span>
-              <span class="dot"></span>
-              <span class="date"><%= formatDate(d.raw_item.published_at) %></span>
-              <% if (d.verified) { %>
-              <span class="badge verified">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6 9 17l-5-5" stroke="#5EEAD4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-                Doğrulandı
-              </span>
-              <% } else { %>
-              <span class="badge pending">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="#FBBF24" stroke-width="2"></circle><path d="M12 7v5l3 3" stroke="#FBBF24" stroke-width="2" stroke-linecap="round"></path></svg>
-                Çapraz doğrulama bekliyor
-              </span>
-              <% } %>
-            </div>
-            <h3><button type="button" class="title-btn" data-action="preview"><%= d.title_tr || d.raw_item.title %></button></h3>
-            <% if (d.title_tr && d.title_tr !== d.raw_item.title) { %>
-            <div class="orig-text">EN: <%= d.raw_item.title %></div>
-            <% } %>
-            <% if (d.sector_tags.length > 0) { %>
-            <div class="tags">
-              <% d.sector_tags.forEach(function(tag) { %><span class="tag"><%= tag %></span><% }) %>
-            </div>
-            <% } %>
-            <button type="button" class="ask-btn" data-action="chat">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-              Sor
-            </button>
-          </div>
-          <div class="priority-col">
-            <span class="p mono <%= !d.verified ? 'na' : '' %>"><%= d.verified ? d.priority_score : '—' %></span>
-            <span class="l">öncelik</span>
-          </div>
-        </div>
-
-        <% if (d.verified) { %>
-        <div class="bars">
-          <div class="bar-group">
-            <div class="bar-label"><span>Teknik etki</span><span class="mono"><%= d.technical_impact_score %></span></div>
-            <div class="bar-track"><div class="bar-fill tech" style="width: <%= d.technical_impact_score %>%"></div></div>
-          </div>
-          <div class="bar-group">
-            <div class="bar-label"><span>Hype</span><span class="mono"><%= d.hype_score %></span></div>
-            <div class="bar-track"><div class="bar-fill hype" style="width: <%= d.hype_score %>%"></div></div>
-          </div>
-          <div class="bar-group">
-            <div class="bar-label"><span>Uygulanabilirlik</span><span class="mono"><%= d.applicability_score %></span></div>
-            <div class="bar-track"><div class="bar-fill applic" style="width: <%= d.applicability_score %>%"></div></div>
-          </div>
-        </div>
-        <% if (d.classification_rationale) { %>
-        <p class="rationale"><%= d.classification_rationale %></p>
-        <% } %>
+  <% if(q||sector||source_type||min_priority||show_unverified){ %><nav class="active-filters" aria-label="Etkin filtreler">
+    <% if(q){ %><a href="<%= qs({q:''}) %>" aria-label="Aramayı temizle"><%= q %> <%- icon('x') %></a><% } %>
+    <% if(sector){ %><a href="<%= qs({sector:''}) %>" aria-label="Sektör filtresini kaldır"><%= sectorLabel(sector) %> <%- icon('x') %></a><% } %>
+    <% if(source_type){ %><a href="<%= qs({source_type:''}) %>" aria-label="Kaynak filtresini kaldır"><%= source_type_labels[source_type] %> <%- icon('x') %></a><% } %>
+    <% if(min_priority){ %><a href="<%= qs({min_priority:0}) %>">Öncelik <%= min_priority %>+ <%- icon('x') %></a><% } %>
+    <% if(show_unverified){ %><a href="<%= qs({show_unverified:false}) %>">Teyit bekleyenler dahil <%- icon('x') %></a><% } %>
+    <a href="/" class="clear-all">Tümünü temizle</a></nav><% } %>
+  <div class="list-heading"><h1 id="feed-heading"><%= period==='today'?'Bugünün haberleri':period==='week'?'Son 7 gün':'Son haberler' %> <span><%= developments.length %></span></h1><label class="original-toggle"><input type="checkbox" id="orig-toggle"> Orijinal başlıklar</label></div>
+  <p class="live-update-message" id="live-update-message" role="status"><%= scanLabels.running ? "Tarama sürüyor · 10 saniyede bir kontrol" : "Yeni haberler otomatik eklenir · Dakikada bir kontrol" %></p>
+  <main id="news-list" tabindex="-1" aria-label="Haberler">
+    <% if(!developments.length){ const archiveCount = typeof searchInfo !== 'undefined' ? searchInfo?.archive_count : null; %>
+    <div class="empty-state"><%- icon('magnifying-glass') %>
+      <% if(q){ %>
+        <h2>Bu filtrelerle eşleşme bulunamadı</h2>
+        <% if(archiveCount > 0){ %>
+          <p>Seçili tarih aralığında sonuç yok. Aynı arama ve diğer filtrelerle tüm zamanlarda <strong><%= archiveCount %> ilgili haber</strong> bulundu.</p>
+          <a href="<%= qs({period:'all'}) %>" class="button primary">Arşivdeki <%= archiveCount %> haberi göster</a>
         <% } else { %>
-        <div class="note-box">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="9" stroke="#FBBF24" stroke-width="2"></circle><path d="M12 7v5l3 3" stroke="#FBBF24" stroke-width="2" stroke-linecap="round"></path></svg>
-          <p><%= d.verification_notes %></p>
-        </div>
+          <p>Kayıtlı haberlerde aramanla ve etkin filtrelerinle eşleşen bir içerik bulamadık. Daha kısa bir konu deneyebilir veya filtreleri kaldırabilirsin.</p>
+          <a href="<%= qs({period:'all',sector:'',source_type:'',min_priority:0}) %>" class="button primary">Aramayı tüm tarihlere ve kaynaklara genişlet</a>
         <% } %>
-      </article>
-      <% }) %>
-    </main>
-  </div>
+      <% } else { %>
+        <h2><%= period==='today' && !sector && !source_type && !min_priority ? 'Bugün henüz haber yok' : 'Bir eşleşme bulamadık' %></h2>
+        <p>Yeni haberler geldiğinde burada otomatik görünecek. Önceki haberleri de inceleyebilirsin.</p>
+        <a href="<%= qs({period:'all'}) %>" class="button primary">Tüm tarihlerdeki haberleri göster</a>
+      <% } %>
+    </div><% } %>
+    <% developments.forEach((d,idx)=>{ const source=sourceLabel(d.raw_item.source.name); const title=d.title_tr||d.raw_item.title; const summary=d.summary_tr||d.raw_item.summary||'Bu gelişmenin ayrıntılarını incele veya Radar Asistanı’na sor.'; const url=safeUrl(d.raw_item.url); %>
+    <article class="story" data-id="<%= d.id %>" data-dev="<%= JSON.stringify({id:d.id,title,summary,url,source,date:formatDate(d.raw_item.published_at),verified:d.verified}) %>">
+      <div class="story-layout"><img class="story-image" alt="" loading="lazy" hidden>
+        <div class="story-body">
+          <div class="story-meta"><span class="source"><%= source %></span><span aria-hidden="true">·</span><time><%= formatDate(d.raw_item.published_at) %></time></div>
+          <h2><button type="button" class="title-button" data-action="preview"><%= title %></button></h2>
+          <% if(d.title_tr && d.title_tr!==d.raw_item.title){ %><p class="original" hidden><%= d.raw_item.title %></p><% } %>
+          <p class="story-summary"><%= summary %></p>
+          <div class="tags"><% d.sector_tags.slice(0,3).forEach(tag=>{ %><a href="<%= qs({sector:tag}) %>"><%= sectorLabel(tag) %></a><% }) %><% if(d.sector_tags.length>3){ %><span title="<%= d.sector_tags.slice(3).map(sectorLabel).join(', ') %>">+<%= d.sector_tags.length-3 %></span><% } %></div>
+          <div class="story-actions"><button type="button" class="button ask-button" data-action="chat" aria-label="<%= title %> hakkında soru sor"><%- icon('chat-circle') %> Soru sor</button><% if(url){ %><a href="<%= url %>" target="_blank" rel="noopener noreferrer" class="source-link">Kaynak <%- icon('arrow-up-right') %></a><% } %></div>
+        </div>
+        <% if(!d.verified){ %><span class="pending-label">Teyit<br>bekliyor</span><% } %>
+      </div>
+    </article>
+    <% }) %>
+  </main>
+  <div class="load-more" hidden><p id="visible-count" class="muted"></p><button class="button subtle" id="load-more" type="button">Daha fazla haber <%- icon('caret-down') %></button></div>
+  <footer class="page-footer"><a class="wordmark footer-brand" href="/" aria-label="Radar ana sayfa"><strong>RADAR</strong><span>AI NEWS DETECT &amp; BLOG</span></a><span>Kaynağı incele. Bağlamı anla.</span></footer>
 </div>
-
-<dialog id="preview-modal" class="modal">
-  <div class="modal-inner">
-    <button type="button" class="modal-close" aria-label="Kapat" data-close>&times;</button>
-    <img id="preview-image" alt="" style="display:none">
-    <h2 id="preview-title"></h2>
-    <p id="preview-summary"></p>
-    <div class="modal-actions">
-      <a id="preview-link" href="#" target="_blank" rel="noopener noreferrer" class="modal-link">Habere git →</a>
-      <button type="button" class="modal-ask-btn" id="preview-ask-btn">Bu gelişme hakkında soru sor</button>
-    </div>
+<aside class="assistant" id="assistant" aria-labelledby="assistant-title" hidden>
+  <header class="assistant-header"><div class="assistant-name"><%- icon('sparkle') %><h2 id="assistant-title">Radar Asistanı</h2></div><button type="button" class="icon-button" id="close-chat" aria-label="Sohbeti kapat"><%- icon('x') %></button><p>Gündemi birlikte anlamlandıralım.</p></header>
+  <div class="chat-context" id="chat-context" hidden><span class="eyebrow">BU HABER HAKKINDA</span><h3 id="chat-title"></h3><div class="context-meta"><span id="chat-source"></span><a id="chat-link" target="_blank" rel="noopener noreferrer">Kaynağı aç <%- icon('arrow-up-right') %></a></div></div>
+  <div class="chat-scroll" id="chat-scroll" tabindex="0" aria-label="Sohbet mesajları">
+    <div class="chat-welcome" id="chat-welcome"><img src="/radar.svg" width="60" height="60" alt=""><h3>Haberin bir adım ötesine geç.</h3><p>Teknik yenilikleri, arka planı ve pratik etkileri birlikte inceleyelim.</p><span class="welcome-tip" id="welcome-tip">Başlamak için bir haberin “Soru sor” düğmesine dokun.</span></div>
+    <div id="chat-messages" role="log" aria-live="polite" aria-relevant="additions text" aria-label="Haber sohbeti"></div>
+  </div>
+  <div class="chat-bottom">
+    <div class="suggestions" id="suggestions"><span>Bir soruyla başla</span><div><button type="button" data-question="Bu gelişmeyi kısaca özetler misin?">Kısaca özetle</button><button type="button" data-question="Bu gelişmenin teknik yeniliği ne?">Teknik yenilik ne?</button><button type="button" data-question="Bu gelişme kimler için önemli?">Kimler için önemli?</button></div></div>
+    <form id="chat-form"><label class="sr-only" for="chat-input">Haber hakkında sorunuz</label><div class="composer"><textarea id="chat-input" rows="2" maxlength="4000" placeholder="Bu haber hakkında bir soru sor…" disabled></textarea><button class="send-button" id="send-chat" type="submit" aria-label="Soruyu gönder" disabled><%- icon('paper-plane-tilt') %></button></div><p class="composer-help"><%- icon('info') %><span>Yanıtlar seçili haberin bağlamına dayanır.</span></p></form>
+  </div>
+</aside>
+<button class="assistant-launcher button primary open-assistant" id="assistant-launcher" type="button" aria-label="Radar Asistanı’nı aç"><%- icon('sparkle') %><span>Radar Asistanı</span></button>
+<dialog id="preview-modal" aria-labelledby="preview-title"><button class="icon-button preview-close" type="button" aria-label="Önizlemeyi kapat"><%- icon('x') %></button><div class="preview-inner"><img id="preview-image" alt="" hidden><span id="preview-meta" class="eyebrow"></span><h2 id="preview-title"></h2><p id="preview-summary"></p><div class="preview-actions"><a id="preview-link" class="button primary" target="_blank" rel="noopener noreferrer">Habere git <%- icon('arrow-up-right') %></a><button type="button" class="button subtle" id="preview-ask"><%- icon('chat-circle') %> Asistana sor</button></div></div></dialog>
+<dialog id="settings-modal" aria-labelledby="settings-title">
+  <button class="icon-button preview-close" type="button" id="close-settings" aria-label="Ayarları kapat"><%- icon('x') %></button>
+  <div class="settings-inner">
+    <h2 id="settings-title">Ayarlar</h2>
+    <section class="settings-section">
+      <h3>Tarama sıklığı</h3>
+      <label class="settings-field">Tarama aralığı
+        <select id="scan-interval">
+          <option value="5">5 dakikada bir</option>
+          <option value="10">10 dakikada bir</option>
+          <option value="15">15 dakikada bir</option>
+          <option value="20">20 dakikada bir</option>
+          <option value="30">30 dakikada bir</option>
+          <option value="60">60 dakikada bir</option>
+          <option value="0">Günün belirli saatlerinde (varsayılan program)</option>
+        </select>
+      </label>
+      <label class="checkbox"><input type="checkbox" id="auto-scan-enabled"> Otomatik tarama açık</label>
+      <button type="button" class="button primary" id="save-scan">Kaydet</button>
+      <p class="settings-status" id="scan-save-status" role="status"></p>
+    </section>
+    <section class="settings-section">
+      <h3>Kaynaklar</h3>
+      <input type="search" id="source-filter" class="settings-field" placeholder="Kaynaklarda ara…">
+      <div class="source-list" id="source-list"></div>
+    </section>
+    <section class="settings-section">
+      <h3>Özel kaynak ekle</h3>
+      <form id="custom-source-form">
+        <label class="settings-field">İsim<input type="text" id="custom-name" required></label>
+        <label class="settings-field">RSS/Atom URL<input type="url" id="custom-url" placeholder="https://…" required></label>
+        <label class="settings-field">Tür
+          <select id="custom-type">
+            <option value="company">Şirket</option>
+            <option value="media">Medya</option>
+            <option value="academic">Akademik</option>
+            <option value="defense">Savunma Sanayii</option>
+            <option value="social">Sosyal Medya</option>
+          </select>
+        </label>
+        <button class="button primary" type="submit">Ekle</button>
+        <p class="settings-status" id="custom-add-status" role="status"></p>
+      </form>
+      <div class="source-list" id="custom-source-list"></div>
+    </section>
   </div>
 </dialog>
-
-<dialog id="chat-modal" class="modal">
-  <div class="modal-inner">
-    <button type="button" class="modal-close" aria-label="Kapat" data-close>&times;</button>
-    <h2 id="chat-title"></h2>
-    <div id="chat-messages" class="chat-messages" role="log" aria-live="polite"></div>
-    <form id="chat-form" class="chat-form">
-      <label for="chat-input" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Soru</label>
-      <input type="text" id="chat-input" placeholder="Bir soru sor..." autocomplete="off">
-      <button type="submit">Gönder</button>
-    </form>
-  </div>
-</dialog>
-
-<script>
-(function () {
-  var previewModal = document.getElementById('preview-modal');
-  var chatModal = document.getElementById('chat-modal');
-  var currentDevId = null;
-  var chatHistory = [];
-
-  function openPreview(dev) {
-    document.getElementById('preview-title').textContent = dev.title;
-    document.getElementById('preview-summary').textContent = dev.summary || 'Özet bulunamadı.';
-    document.getElementById('preview-link').href = dev.url;
-    var img = document.getElementById('preview-image');
-    img.style.display = 'none';
-    img.removeAttribute('src');
-    document.getElementById('preview-ask-btn').onclick = function () {
-      previewModal.close();
-      openChat(dev);
-    };
-    previewModal.showModal();
-
-    fetch('/developments/' + dev.id + '/preview')
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (data) {
-        if (data && data.image) {
-          img.src = data.image;
-          img.style.display = 'block';
-        }
-      })
-      .catch(function () {});
-  }
-
-  function addMessage(role, text) {
-    var messagesEl = document.getElementById('chat-messages');
-    var bubble = document.createElement('div');
-    bubble.className = 'chat-bubble ' + role;
-    bubble.textContent = text;
-    messagesEl.appendChild(bubble);
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-    return bubble;
-  }
-
-  function openChat(dev) {
-    currentDevId = dev.id;
-    chatHistory = [];
-    document.getElementById('chat-title').textContent = dev.title;
-    document.getElementById('chat-messages').innerHTML = '';
-    addMessage('assistant', 'Bu gelişme hakkında soru sorabilirsin - teknik detaylar, arka plan ya da etkileri hakkında.');
-    chatModal.showModal();
-    document.getElementById('chat-input').focus();
-  }
-
-  document.querySelectorAll('[data-dev]').forEach(function (el) {
-    var dev = JSON.parse(el.getAttribute('data-dev'));
-    var previewBtn = el.querySelector('[data-action="preview"]');
-    var chatBtn = el.querySelector('[data-action="chat"]');
-    if (previewBtn) previewBtn.addEventListener('click', function () { openPreview(dev); });
-    if (chatBtn) chatBtn.addEventListener('click', function () { openChat(dev); });
-  });
-
-  document.getElementById('chat-form').addEventListener('submit', function (e) {
-    e.preventDefault();
-    var input = document.getElementById('chat-input');
-    var question = input.value.trim();
-    if (!question || currentDevId === null) return;
-    input.value = '';
-    addMessage('user', question);
-    var loadingBubble = addMessage('assistant', 'Yazıyor...');
-    loadingBubble.classList.add('loading');
-
-    fetch('/developments/' + currentDevId + '/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: question, history: chatHistory }),
-    })
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        loadingBubble.remove();
-        var answer = data.answer || data.error || 'Bir hata oluştu.';
-        addMessage('assistant', answer);
-        chatHistory.push({ role: 'user', content: question });
-        chatHistory.push({ role: 'assistant', content: answer });
-      })
-      .catch(function () {
-        loadingBubble.remove();
-        addMessage('assistant', 'Bağlantı hatası oluştu.');
-      });
-  });
-
-  document.querySelectorAll('[data-close]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      btn.closest('dialog').close();
-    });
-  });
-})();
-</script>
-</body>
-</html>
+<noscript><style>.filter-fields[hidden]{display:grid}.assistant-launcher,.open-assistant{display:none}</style><p class="notice">Sohbet ve haber önizlemesi için JavaScript'i etkinleştir. Haber kaynakları ve filtreler kullanılabilir.</p></noscript>
+</body></html>

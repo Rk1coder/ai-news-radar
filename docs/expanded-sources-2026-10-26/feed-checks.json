@@ -1,0 +1,138 @@
+[
+  {
+    "source": "n8n-blog",
+    "ok": true,
+    "count": 5,
+    "newest": "2026-10-23 12:20:34",
+    "oldest": "2026-10-22 15:01:32",
+    "title": "AI Agent Memory: How LLM Agents Manage State in Production"
+  },
+  {
+    "source": "make-blog",
+    "ok": true,
+    "count": 7,
+    "newest": "2026-10-23 14:59:30.725000",
+    "oldest": "2026-10-23 10:35:46.303000",
+    "title": "Make Grid: Visualizing the future"
+  },
+  {
+    "source": "zapier-blog",
+    "ok": true,
+    "count": 5,
+    "newest": "2026-10-23 14:23:00",
+    "oldest": "2026-10-23 04:00:00",
+    "title": "The 5 best Pomodoro timer apps in 2026"
+  },
+  {
+    "source": "the-rundown-ai",
+    "ok": true,
+    "count": 4,
+    "newest": "2026-10-26 10:00:00",
+    "oldest": "2026-10-23 10:00:00",
+    "title": "Kimi continues to challenge the frontier with K3.1 Pro"
+  },
+  {
+    "source": "medium-ai-automation",
+    "ok": true,
+    "count": 32,
+    "newest": "2026-10-26 14:34:58",
+    "oldest": "2026-10-24 09:43:30",
+    "title": "I scored an interview with the man in Searle’s Chinese Room!"
+  },
+  {
+    "source": "dogus-teknoloji-medium",
+    "ok": true,
+    "count": 1,
+    "newest": "2026-10-21 07:11:48",
+    "oldest": "2026-10-21 07:11:48",
+    "title": "Robotlar Geliyor : Şirketler Bu Dönüşüme Hazır mı?"
+  },
+  {
+    "source": "dogus-teknoloji-blog",
+    "ok": true,
+    "count": 1,
+    "newest": "2026-10-19 21:00:00",
+    "oldest": "2026-10-19 21:00:00",
+    "title": "Zero UI Sistemlerinde Kullanıcı Niyeti Ne Zaman Aksiyona Dönüştürülmelidir?"
+  },
+  {
+    "source": "atalay-tech",
+    "ok": true,
+    "count": 1,
+    "newest": "2026-09-28 21:33:00",
+    "oldest": "2026-09-28 21:33:00",
+    "title": "atalay.ai: Claude ile yapay zekâ çalışanı ekibi kurmak"
+  },
+  {
+    "source": "reddit-localllama",
+    "ok": true,
+    "count": 100,
+    "newest": "2026-10-26 14:26:27",
+    "oldest": "2026-10-24 20:12:28",
+    "title": "datapoint: 2x M5U cluster (GLM/Qwen)"
+  },
+  {
+    "source": "ollama-blog",
+    "ok": true,
+    "count": 1,
+    "newest": "2026-10-24 00:00:00",
+    "oldest": "2026-10-24 00:00:00",
+    "title": "Speech models in Ollama"
+  },
+  {
+    "source": "lm-studio-blog",
+    "ok": true,
+    "count": 1,
+    "newest": "2026-09-18 00:00:00",
+    "oldest": "2026-09-18 00:00:00",
+    "title": "Splash Engine - the fastest local Qwen3.8 on Apple Silicon"
+  },
+  {
+    "source": "civitai-education",
+    "ok": true,
+    "count": 1,
+    "newest": "2025-11-18 21:41:37",
+    "oldest": "2025-11-18 21:41:37",
+    "title": "Build an AI Influencer with Civitai.com"
+  },
+  {
+    "source": "stable-diffusion-art",
+    "ok": true,
+    "count": 2,
+    "newest": "2026-10-26 01:38:47",
+    "oldest": "2026-10-23 12:29:00",
+    "title": "Qwen Image 2.1 in ComfyUI: Multi-Image Editing, Text-to-Image & Native Transparency (Workflows Included)"
+  },
+  {
+    "source": "openzeka-blog",
+    "ok": true,
+    "count": 1,
+    "newest": "2026-10-21 11:55:54",
+    "oldest": "2026-10-21 11:55:54",
+    "title": "NVIDIA GTC Berlin 2026: Yapay Zekada Sırada Ne Var?"
+  },
+  {
+    "source": "masqot-blog",
+    "ok": true,
+    "count": 5,
+    "newest": "2026-10-26 07:02:06",
+    "oldest": "2026-10-23 05:00:00",
+    "title": "İngiltere'de Siber Güvenlik Krizi: PHP Güvenlik Açığı"
+  },
+  {
+    "source": "huggingface-blog",
+    "ok": true,
+    "count": 3,
+    "newest": "2026-10-23 16:15:50",
+    "oldest": "2026-10-22 22:24:34",
+    "title": "LitPivot: Developing research ideas through dynamic contextualization within the literature landscape"
+  },
+  {
+    "source": "bens-bites",
+    "ok": true,
+    "count": 1,
+    "newest": "2026-10-22 13:01:21",
+    "oldest": "2026-10-22 13:01:21",
+    "title": "Claude’s personal agent"
+  }
+]

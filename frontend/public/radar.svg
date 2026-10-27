@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+  <title id="title">Radar</title>
+  <desc id="desc">Kâğıt beyazı üzerinde mürekkep renkli halkalarla dönen bir tarama ışığı ve keşfedilen sinyaller.</desc>
+  <defs>
+    <radialGradient id="surface"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#f2f2f3"/></radialGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#17191c"/><stop offset=".5" stop-color="#646873"/><stop offset="1" stop-color="#a3a6af"/></linearGradient>
+  </defs>
+  <style>
+    .sweep { transform-origin: 48px 48px; animation: scan 6s linear infinite; }
+    .signal { animation: discover 6s linear infinite; }
+    .signal-two { animation-delay: -3s; }
+    .echo { transform-box: fill-box; transform-origin: center; animation: echo 6s linear infinite; }
+    .echo-two { animation-delay: -3s; }
+    @keyframes scan { to { transform: rotate(360deg); } }
+    @keyframes discover { 0%, 2%, 100% { opacity: 1; } 15% { opacity: .75; } 55%, 94% { opacity: .25; } }
+    @keyframes echo { 0% { transform: scale(.65); opacity: .7; } 22%, 100% { transform: scale(1.8); opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) {
+      .sweep, .signal, .echo { animation: none; }
+      .echo { opacity: 0; }
+    }
+  </style>
+  <circle cx="48" cy="48" r="44" fill="url(#surface)"/>
+  <circle cx="48" cy="48" r="41" fill="none" stroke="url(#rim)" stroke-width="2.5"/>
+  <g fill="none" stroke="#17191c">
+    <circle cx="48" cy="48" r="28" stroke-opacity=".25" stroke-width="1.2"/>
+    <circle cx="48" cy="48" r="14" stroke-opacity=".3" stroke-width="1.2"/>
+    <path d="M48 9v5m34 34h5M48 82v5M9 48h5" stroke-opacity=".6" stroke-width="2"/>
+  </g>
+  <!-- A translucent trail keeps the beam crisp even at icon size. -->
+  <g class="sweep">
+    <path d="M48 48 14.23 28.5A39 39 0 0 1 28.5 14.23Z" fill="#17191c" opacity=".04"/>
+    <path d="M48 48 28.5 14.23A39 39 0 0 1 48 9Z" fill="#17191c" opacity=".08"/>
+    <path d="M48 48 48 9A39 39 0 0 1 67.5 14.23Z" fill="#17191c" opacity=".14"/>
+    <path d="M48 48 67.5 14.23A39 39 0 0 1 75.58 20.42Z" fill="#17191c" opacity=".24"/>
+    <path d="m48 48 27.58-27.58" stroke="#17191c" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <circle class="echo" cx="67.8" cy="28.2" r="5" fill="none" stroke="#17191c" stroke-width="1" opacity="0"/>
+  <circle class="echo echo-two" cx="33.86" cy="62.14" r="5" fill="none" stroke="#17191c" stroke-width="1" opacity="0"/>
+  <circle class="signal" cx="67.8" cy="28.2" r="3.3" fill="#17191c"/>
+  <circle class="signal signal-two" cx="33.86" cy="62.14" r="2.7" fill="#17191c"/>
+  <circle cx="48" cy="48" r="6" fill="#17191c" opacity=".13"/>
+  <circle cx="48" cy="48" r="3.5" fill="#17191c"/>
+</svg>

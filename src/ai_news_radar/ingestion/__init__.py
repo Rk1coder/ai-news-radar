@@ -1,8 +1,10 @@
 from ai_news_radar.ingestion.arxiv import ArxivConnector
 from ai_news_radar.ingestion.base import Connector
+from ai_news_radar.ingestion.blogs import DogusBlogConnector, JsonLdBlogConnector, MakeBlogConnector
 from ai_news_radar.ingestion.hackernews import HackerNewsConnector
 from ai_news_radar.ingestion.huggingface_papers import HuggingFaceDailyPapersConnector
-from ai_news_radar.ingestion.rss import RssConnector
+from ai_news_radar.ingestion.rss import MultiRssConnector, RssConnector
+from ai_news_radar.ingestion.substack import SubstackTopicsConnector
 
 # Karar 1-A: aktif kaynaklar burada toplanir; cli ve web/app.py bu listeyi paylasir.
 # "defense"/"social" turu kaynaklar icin verification/rules.py henuz capraz dogrulama
@@ -11,8 +13,10 @@ from ai_news_radar.ingestion.rss import RssConnector
 def default_connectors() -> list[Connector]:
     return [
         ArxivConnector(),
-        RssConnector("huggingface-blog", "https://huggingface.co/blog/feed.xml"),
+        RssConnector("huggingface-blog", "https://huggingface.co/blog/feed.xml",
+                     max_results=50, lookback_days=4, latest_fallback=1),
         HuggingFaceDailyPapersConnector(),
+        SubstackTopicsConnector(),
         RssConnector("openai-news", "https://openai.com/news/rss.xml"),
         RssConnector("deepmind-blog", "https://deepmind.google/blog/rss.xml"),
         RssConnector(
@@ -67,9 +71,6 @@ def default_connectors() -> list[Connector]:
             max_results=10,
         ),
         RssConnector(
-            "github-llama-cpp", "https://github.com/ggml-org/llama.cpp/releases.atom", max_results=5
-        ),
-        RssConnector(
             "github-llamaindex",
             "https://github.com/run-llama/llama_index/releases.atom",
             max_results=5,
@@ -85,7 +86,8 @@ def default_connectors() -> list[Connector]:
             max_results=5,
         ),
         RssConnector(
-            "bens-bites", "https://www.bensbites.com/feed.xml", source_type="media", max_results=10
+            "bens-bites", "https://www.bensbites.com/feed.xml", source_type="media",
+            max_results=50, lookback_days=4, latest_fallback=1
         ),
         RssConnector(
             "tldr-ai", "https://tldr.tech/api/rss/ai", source_type="media", max_results=10
@@ -101,4 +103,89 @@ def default_connectors() -> list[Connector]:
             source_type="defense",
         ),
         HackerNewsConnector(),
+        *automation_and_local_ai_connectors(),
+        *youtube_and_community_connectors(),
     ]
+
+
+def automation_and_local_ai_connectors() -> list[Connector]:
+    """Requested sources: rolling four days, or the latest post for quiet blogs.
+
+    Platform feed sizes bound coverage; this is not a complete historical crawl.
+    The shared scheduler checks these on every scan (15 minutes by default).
+    """
+    recent = dict(max_results=50, lookback_days=4, latest_fallback=1)
+    return [
+        RssConnector('n8n-blog', 'https://blog.n8n.io/rss/', **recent),
+        MakeBlogConnector(),
+        RssConnector('zapier-blog', 'https://zapier.com/blog/feeds/latest/', **recent),
+        RssConnector('the-rundown-ai', 'https://www.therundown.ai/feed', source_type='media', **recent),
+        MultiRssConnector('medium-ai-automation', [
+            'https://medium.com/feed/tag/artificial-intelligence',
+            'https://medium.com/feed/tag/automation',
+            'https://medium.com/feed/tag/yapay-zeka',
+            'https://medium.com/feed/tag/otomasyon',
+        ], source_type='social', **recent),
+        RssConnector('dogus-teknoloji-medium', 'https://medium.com/feed/dogus-teknoloji', **recent),
+        DogusBlogConnector(),
+        JsonLdBlogConnector('atalay-tech', 'https://atalay.tech/blog'),
+        RssConnector('reddit-localllama', 'https://www.reddit.com/r/LocalLLaMA/new/.rss?limit=100',
+                     source_type='social', max_results=100, lookback_days=4, latest_fallback=1),
+        RssConnector('ollama-blog', 'https://ollama.com/blog/rss.xml', **recent),
+        RssConnector('lm-studio-blog', 'https://lmstudio.ai/rss.xml', **recent),
+        RssConnector('civitai-education', 'https://education.civitai.com/feed/', **recent),
+        RssConnector('stable-diffusion-art', 'https://stable-diffusion-art.com/feed/', source_type='media', **recent),
+        RssConnector('openzeka-blog', 'https://blog.openzeka.com/feed/', **recent),
+        RssConnector('masqot-blog', 'https://www.masqot.co/feed/', source_type='media', **recent),
+    ]
+
+
+def youtube_and_community_connectors() -> list[Connector]:
+    """Requested sources: YouTube AI kanallari + daha fazla Reddit/forum toplulugu."""
+    recent = dict(max_results=50, lookback_days=4, latest_fallback=1)
+    reddit = dict(source_type='social', max_results=100, lookback_days=4, latest_fallback=1)
+    youtube = 'https://www.youtube.com/feeds/videos.xml?channel_id='
+    return [
+        RssConnector('yt-two-minute-papers', youtube + 'UCbfYPyITQ-7l4upoX8nvctg',
+                     source_type='media', **recent),
+        RssConnector('yt-yannic-kilcher', youtube + 'UCZHmQk67mSJgfCCTn7xBfew',
+                     source_type='media', **recent),
+        RssConnector('yt-ai-explained', youtube + 'UCNJ1Ymd5yFuUPtn21xtRbbw',
+                     source_type='media', **recent),
+        RssConnector('yt-lex-fridman', youtube + 'UCSHZKyawb77ixDdsGog4iWA',
+                     source_type='media', **recent),
+        RssConnector('yt-matt-wolfe', youtube + 'UChpleBmo18P08aKCIgti38g',
+                     source_type='media', **recent),
+        RssConnector('yt-ai-jason', youtube + 'UCrXSVX9a1mj8l0CMLwKgMVw',
+                     source_type='media', **recent),
+        RssConnector('reddit-machinelearning',
+                     'https://www.reddit.com/r/MachineLearning/new/.rss?limit=100', **reddit),
+        RssConnector('reddit-artificial',
+                     'https://www.reddit.com/r/artificial/new/.rss?limit=100', **reddit),
+        RssConnector('reddit-singularity',
+                     'https://www.reddit.com/r/singularity/new/.rss?limit=100', **reddit),
+        RssConnector('reddit-openai',
+                     'https://www.reddit.com/r/OpenAI/new/.rss?limit=100', **reddit),
+        RssConnector('reddit-stablediffusion',
+                     'https://www.reddit.com/r/StableDiffusion/new/.rss?limit=100', **reddit),
+        RssConnector('reddit-chatgpt',
+                     'https://www.reddit.com/r/ChatGPT/new/.rss?limit=100', **reddit),
+        RssConnector('huggingface-forum', 'https://discuss.huggingface.co/latest.rss',
+                     source_type='social', **recent),
+        RssConnector('openai-community-forum', 'https://community.openai.com/latest.rss',
+                     source_type='social', **recent),
+    ]
+
+
+def active_connectors(session) -> list[Connector]:
+    """Karar: default_connectors()'tan kullanicinin kapattigi kaynaklari cikarir,
+    ekledigi ozel RSS kaynaklarini ekler. scans.py burayi default_connectors() yerine cagirir."""
+    from ai_news_radar.models import CustomSource, SourceToggle
+
+    disabled = {row.source_name for row in session.query(SourceToggle).filter_by(enabled=False)}
+    connectors = [c for c in default_connectors() if c.source_name not in disabled]
+    connectors += [
+        RssConnector(cs.name, cs.feed_url, cs.source_type)
+        for cs in session.query(CustomSource).filter_by(enabled=True)
+    ]
+    return connectors

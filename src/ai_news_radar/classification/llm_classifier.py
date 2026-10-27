@@ -50,8 +50,13 @@ direnc goster.
 Ayrica sector_tags: ["defense", "healthcare", "finance", "manufacturing", "general_software", ...]
 listesinden ilgili olanlari sec (birden fazla olabilir).
 
-Son olarak basligi ve ozeti akici Turkceye cevir (title_tr, summary_tr) - duz ceviri,
-yorum katma; kaynak Ingilizce degilse bile Turkce bir karsilik uret.
+Son olarak başlığı ve özeti akıcı Türkçeye çevir (title_tr, summary_tr) - düz çeviri,
+yorum katma; kaynak İngilizce değilse bile Türkçe bir karşılık üret. title_tr ve
+summary_tr alanlarını MUTLAKA doğru Türkçe yazım kurallarıyla, Türkçeye özgü harfleri
+(ı, ğ, ş, ç, ö, ü, İ) eksiksiz kullanarak yaz - "tarayicida" degil "tarayıcıda",
+"icin" degil "için" gibi ASCII'ye indirgenmiş yazım KABUL EDİLMEZ. Yaygın teknik
+terimleri (LLM, API, GPU, transformer, embedding gibi) olduğu gibi bırak, zorla
+Türkçeleştirme.
 
 SADECE gecerli JSON dondur, baska hicbir metin ekleme. rationale alanini KISA tut
 (en fazla 2 cumle) - uzun aciklama JSON'un kesilmesine (bozulmasina) yol aciyor:
@@ -102,3 +107,33 @@ def classify(title: str, summary: str) -> ClassificationResult:
         title_tr=str(data.get("title_tr", "")),
         summary_tr=str(data.get("summary_tr", "")),
     )
+
+
+TRANSLATE_SYSTEM_PROMPT = """Sen bir AI/teknoloji haberleri çevirmenisin. Sana bir
+gelişmenin başlığı ve özeti verilecek. Görevin bunları akıcı Türkçeye çevirmek -
+düz çeviri, yorum katma; kaynak İngilizce değilse bile Türkçe bir karşılık üret.
+
+Çıktıyı MUTLAKA doğru Türkçe yazım kurallarıyla, Türkçeye özgü harfleri
+(ı, ğ, ş, ç, ö, ü, İ) eksiksiz kullanarak yaz - "tarayicida" değil "tarayıcıda",
+"icin" değil "için" gibi ASCII'ye indirgenmiş yazım KABUL EDİLMEZ. Yaygın teknik
+terimleri (LLM, API, GPU, transformer, embedding gibi) olduğu gibi bırak, zorla
+Türkçeleştirme.
+
+SADECE geçerli JSON döndür, başka hiçbir metin ekleme:
+{"title_tr": str, "summary_tr": str}
+"""
+
+
+def translate(title: str, summary: str) -> tuple[str, str]:
+    """Baslik/ozeti Turkceye cevirir - skorlari etkilemeden sadece ceviriyi yeniler."""
+    client = Anthropic(api_key=ANTHROPIC_API_KEY)
+    message = client.messages.create(
+        model=CLASSIFIER_MODEL,
+        max_tokens=1024,
+        system=TRANSLATE_SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": f"Baslik: {title}\n\nOzet: {summary}"}],
+    )
+    raw_text = message.content[0].text.strip()
+    raw_text = raw_text.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+    data = json.loads(raw_text)
+    return str(data.get("title_tr", "")), str(data.get("summary_tr", ""))

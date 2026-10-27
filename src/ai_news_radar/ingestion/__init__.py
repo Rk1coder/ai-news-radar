@@ -129,8 +129,6 @@ def automation_and_local_ai_connectors() -> list[Connector]:
         RssConnector('dogus-teknoloji-medium', 'https://medium.com/feed/dogus-teknoloji', **recent),
         DogusBlogConnector(),
         JsonLdBlogConnector('atalay-tech', 'https://atalay.tech/blog'),
-        RssConnector('reddit-localllama', 'https://www.reddit.com/r/LocalLLaMA/new/.rss?limit=100',
-                     source_type='social', max_results=100, lookback_days=4, latest_fallback=1),
         RssConnector('ollama-blog', 'https://ollama.com/blog/rss.xml', **recent),
         RssConnector('lm-studio-blog', 'https://lmstudio.ai/rss.xml', **recent),
         RssConnector('civitai-education', 'https://education.civitai.com/feed/', **recent),
@@ -158,18 +156,16 @@ def youtube_and_community_connectors() -> list[Connector]:
                      source_type='media', **recent),
         RssConnector('yt-ai-jason', youtube + 'UCrXSVX9a1mj8l0CMLwKgMVw',
                      source_type='media', **recent),
-        RssConnector('reddit-machinelearning',
-                     'https://www.reddit.com/r/MachineLearning/new/.rss?limit=100', **reddit),
-        RssConnector('reddit-artificial',
-                     'https://www.reddit.com/r/artificial/new/.rss?limit=100', **reddit),
-        RssConnector('reddit-singularity',
-                     'https://www.reddit.com/r/singularity/new/.rss?limit=100', **reddit),
-        RssConnector('reddit-openai',
-                     'https://www.reddit.com/r/OpenAI/new/.rss?limit=100', **reddit),
-        RssConnector('reddit-stablediffusion',
-                     'https://www.reddit.com/r/StableDiffusion/new/.rss?limit=100', **reddit),
-        RssConnector('reddit-chatgpt',
-                     'https://www.reddit.com/r/ChatGPT/new/.rss?limit=100', **reddit),
+        # Karar: Reddit'in anonim rate limiti IP basina, subreddit basina degil - 7 ayri
+        # istek yerine Reddit'in kendi "+" ile coklu subreddit birlestirme ozelligiyle
+        # TEK istekte topluyoruz (daha once her subreddit ayri connector'di, hepsi ayni
+        # taramada art arda 429/403 aliyordu).
+        RssConnector(
+            'reddit-ai-communities',
+            'https://www.reddit.com/r/LocalLLaMA+MachineLearning+artificial+singularity'
+            '+OpenAI+StableDiffusion+ChatGPT/new/.rss?limit=100',
+            **reddit,
+        ),
         RssConnector('huggingface-forum', 'https://discuss.huggingface.co/latest.rss',
                      source_type='social', **recent),
         RssConnector('openai-community-forum', 'https://community.openai.com/latest.rss',

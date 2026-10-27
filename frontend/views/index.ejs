@@ -113,17 +113,12 @@
     <h2 id="settings-title">Ayarlar</h2>
     <section class="settings-section">
       <h3>Tarama sıklığı</h3>
-      <label class="settings-field">Tarama aralığı
-        <select id="scan-interval">
-          <option value="5">5 dakikada bir</option>
-          <option value="10">10 dakikada bir</option>
-          <option value="15">15 dakikada bir</option>
-          <option value="20">20 dakikada bir</option>
-          <option value="30">30 dakikada bir</option>
-          <option value="60">60 dakikada bir</option>
-          <option value="0">Günün belirli saatlerinde (varsayılan program)</option>
-        </select>
-      </label>
+      <span class="settings-field">Tarama aralığı</span>
+      <div class="segmented" id="scan-interval-group" role="radiogroup" aria-label="Tarama aralığı">
+        <% [['5','5 dk'],['10','10 dk'],['15','15 dk'],['20','20 dk'],['30','30 dk'],['60','60 dk'],['0','Program']].forEach(([value,label])=>{ %>
+        <label class="segment"><input type="radio" name="scan-interval" value="<%= value %>" class="sr-only"><span><%= label %></span></label>
+        <% }) %>
+      </div>
       <label class="checkbox"><input type="checkbox" id="auto-scan-enabled"> Otomatik tarama açık</label>
       <button type="button" class="button primary" id="save-scan">Kaydet</button>
       <p class="settings-status" id="scan-save-status" role="status"></p>

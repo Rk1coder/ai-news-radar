@@ -22,7 +22,10 @@
   }
 
   function renderScan() {
-    $("scan-interval").value = String(data.scan.interval_minutes ?? 15);
+    const val = String(data.scan.interval_minutes ?? 15);
+    document
+      .querySelectorAll('#scan-interval-group input[name="scan-interval"]')
+      .forEach((r) => (r.checked = r.value === val));
     $("auto-scan-enabled").checked = !!data.scan.auto_scan_enabled;
   }
 
@@ -44,7 +47,7 @@
             `<fieldset><legend>${sourceTypeLabels[type] || type}</legend>${items
               .map(
                 (s) =>
-                  `<label class="checkbox"><input type="checkbox" data-source="${s.name}" ${s.enabled ? "checked" : ""}> ${s.name}</label>`,
+                  `<label class="source-row"><span>${s.name}</span><span class="switch"><input type="checkbox" data-source="${s.name}" ${s.enabled ? "checked" : ""}></span></label>`,
               )
               .join("")}</fieldset>`,
         )
@@ -89,10 +92,13 @@
   $("save-scan").addEventListener("click", async () => {
     $("scan-save-status").textContent = "Kaydediliyor…";
     try {
+      const checked = document.querySelector(
+        '#scan-interval-group input[name="scan-interval"]:checked',
+      );
       data = await api("/settings-api/scan", {
         method: "PUT",
         body: JSON.stringify({
-          interval_minutes: Number($("scan-interval").value),
+          interval_minutes: Number(checked?.value ?? 15),
           auto_scan_enabled: $("auto-scan-enabled").checked,
         }),
       });

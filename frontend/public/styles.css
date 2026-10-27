@@ -472,7 +472,11 @@ a .icon {
   border: 1px solid #d4d4d8;
   border-radius: var(--radius-card);
   overflow: hidden;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, transform 0.15s ease, box-shadow 0.15s ease;
+}
+.story:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px -16px rgb(0 0 0 / 0.22);
 }
 .story.is-active {
   border-color: var(--text);
@@ -507,8 +511,12 @@ a .icon {
   letter-spacing: 0.015em;
 }
 .source {
-  letter-spacing: 0.035em;
+  letter-spacing: 0.02em;
   font-weight: 500;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--peach);
+  color: var(--sienna);
 }
 .story h2 {
   margin: 0;
@@ -548,17 +556,23 @@ a .icon {
 .tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
 }
 .tags a,
 .tags span {
-  padding: 2px 0;
+  padding: 4px 10px;
   line-height: 1.5;
   font-size: 12px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
   color: var(--muted);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.tags a:hover {
+  background: var(--surface);
+  border-color: var(--accent);
+  color: var(--text);
 }
 .story-actions {
   display: flex;
@@ -1661,7 +1675,7 @@ dialog::backdrop {
 
 /* Editorial accents stay inside the single summary card. */
 .brief-full .muted { color: var(--sienna); }
-.title-button:hover, .source-link:hover, .text-link:hover, .tags a:hover {
+.title-button:hover, .source-link:hover, .text-link:hover {
   text-decoration: underline;
   text-underline-offset: 4px;
 }

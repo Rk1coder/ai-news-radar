@@ -113,59 +113,68 @@
 <dialog id="settings-modal" aria-labelledby="settings-title">
   <button class="icon-button preview-close" type="button" id="close-settings" aria-label="Ayarları kapat"><%- icon('x') %></button>
   <div class="settings-inner">
-    <h2 id="settings-title">Ayarlar</h2>
-    <div class="settings-body" id="settings-body">
-      <section class="settings-section">
-        <h3>Tarama sıklığı</h3>
-        <div class="settings-row">
-          <div class="settings-row-text">
-            <span class="row-label">Tarama aralığı <span class="badge-changed" id="interval-changed" hidden>Değişti</span></span>
-            <span class="row-desc">Kaynaklar ne sıklıkla taransın.</span>
-          </div>
-          <div class="segmented" id="scan-interval-group" role="radiogroup" aria-label="Tarama aralığı">
-            <% [['5','5 dk'],['10','10 dk'],['15','15 dk'],['20','20 dk'],['30','30 dk'],['60','60 dk'],['0','Program']].forEach(([value,label])=>{ %>
-            <label class="segment"><input type="radio" name="scan-interval" value="<%= value %>" class="sr-only"><span><%= label %></span></label>
-            <% }) %>
+    <div class="settings-shell">
+      <nav class="settings-nav" aria-label="Ayarlar kategorileri">
+        <h2 id="settings-title">Ayarlar</h2>
+        <button type="button" class="settings-nav-item is-active" data-panel="scan">Tarama</button>
+        <button type="button" class="settings-nav-item" data-panel="sources">Kaynaklar</button>
+        <button type="button" class="settings-nav-item" data-panel="custom">Özel kaynak</button>
+      </nav>
+      <div class="settings-main">
+        <div class="settings-body" id="settings-body">
+          <section class="settings-section" data-panel="scan">
+            <h3>Tarama sıklığı</h3>
+            <div class="settings-row">
+              <div class="settings-row-text">
+                <span class="row-label">Tarama aralığı <span class="badge-changed" id="interval-changed" hidden>Değişti</span></span>
+                <span class="row-desc">Kaynaklar ne sıklıkla taransın.</span>
+              </div>
+              <div class="segmented" id="scan-interval-group" role="radiogroup" aria-label="Tarama aralığı">
+                <% [['5','5 dk'],['10','10 dk'],['15','15 dk'],['20','20 dk'],['30','30 dk'],['60','60 dk'],['0','Program']].forEach(([value,label])=>{ %>
+                <label class="segment"><input type="radio" name="scan-interval" value="<%= value %>" class="sr-only"><span><%= label %></span></label>
+                <% }) %>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-text">
+                <span class="row-label">Otomatik tarama <span class="badge-changed" id="auto-scan-changed" hidden>Değişti</span></span>
+                <span class="row-desc">Kapatırsan sadece "Güncelle" düğmesiyle tarama yapılır.</span>
+              </div>
+              <span class="switch"><input type="checkbox" id="auto-scan-enabled"></span>
+            </div>
+          </section>
+          <section class="settings-section" data-panel="sources" hidden>
+            <h3>Kaynaklar</h3>
+            <input type="search" id="source-filter" class="settings-field" placeholder="Kaynaklarda ara…">
+            <div class="source-list" id="source-list"></div>
+          </section>
+          <section class="settings-section" data-panel="custom" hidden>
+            <h3>Özel kaynak ekle</h3>
+            <form id="custom-source-form">
+              <label class="settings-field">İsim<input type="text" id="custom-name" required></label>
+              <label class="settings-field">RSS/Atom URL<input type="url" id="custom-url" placeholder="https://…" required></label>
+              <label class="settings-field">Tür
+                <select id="custom-type">
+                  <option value="company">Şirket</option>
+                  <option value="media">Medya</option>
+                  <option value="academic">Akademik</option>
+                  <option value="defense">Savunma Sanayii</option>
+                  <option value="social">Sosyal Medya</option>
+                </select>
+              </label>
+              <button class="button primary" type="submit">Ekle</button>
+              <p class="settings-status" id="custom-add-status" role="status"></p>
+            </form>
+            <div class="source-list" id="custom-source-list"></div>
+          </section>
+        </div>
+        <div class="settings-footer" id="settings-footer" hidden>
+          <span id="settings-footer-status">Kaydedilmemiş değişiklikler var</span>
+          <div class="settings-footer-actions">
+            <button type="button" class="button subtle" id="settings-cancel">Vazgeç</button>
+            <button type="button" class="button primary" id="settings-save">Kaydet</button>
           </div>
         </div>
-        <div class="settings-row">
-          <div class="settings-row-text">
-            <span class="row-label">Otomatik tarama <span class="badge-changed" id="auto-scan-changed" hidden>Değişti</span></span>
-            <span class="row-desc">Kapatırsan sadece "Güncelle" düğmesiyle tarama yapılır.</span>
-          </div>
-          <span class="switch"><input type="checkbox" id="auto-scan-enabled"></span>
-        </div>
-      </section>
-      <section class="settings-section">
-        <h3>Kaynaklar</h3>
-        <input type="search" id="source-filter" class="settings-field" placeholder="Kaynaklarda ara…">
-        <div class="source-list" id="source-list"></div>
-      </section>
-      <section class="settings-section">
-        <h3>Özel kaynak ekle</h3>
-        <form id="custom-source-form">
-          <label class="settings-field">İsim<input type="text" id="custom-name" required></label>
-          <label class="settings-field">RSS/Atom URL<input type="url" id="custom-url" placeholder="https://…" required></label>
-          <label class="settings-field">Tür
-            <select id="custom-type">
-              <option value="company">Şirket</option>
-              <option value="media">Medya</option>
-              <option value="academic">Akademik</option>
-              <option value="defense">Savunma Sanayii</option>
-              <option value="social">Sosyal Medya</option>
-            </select>
-          </label>
-          <button class="button primary" type="submit">Ekle</button>
-          <p class="settings-status" id="custom-add-status" role="status"></p>
-        </form>
-        <div class="source-list" id="custom-source-list"></div>
-      </section>
-    </div>
-    <div class="settings-footer" id="settings-footer" hidden>
-      <span id="settings-footer-status">Kaydedilmemiş değişiklikler var</span>
-      <div class="settings-footer-actions">
-        <button type="button" class="button subtle" id="settings-cancel">Vazgeç</button>
-        <button type="button" class="button primary" id="settings-save">Kaydet</button>
       </div>
     </div>
   </div>

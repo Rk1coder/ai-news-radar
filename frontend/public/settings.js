@@ -122,6 +122,18 @@
 
   document.querySelectorAll("#open-settings").forEach((btn) => btn.addEventListener("click", openSettings));
   $("close-settings").addEventListener("click", () => modal.close());
+
+  document.querySelectorAll(".settings-nav-item").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document
+        .querySelectorAll(".settings-nav-item")
+        .forEach((b) => b.classList.toggle("is-active", b === btn));
+      document
+        .querySelectorAll(".settings-section[data-panel]")
+        .forEach((sec) => (sec.hidden = sec.dataset.panel !== btn.dataset.panel));
+    });
+  });
+
   modal.addEventListener("click", (e) => {
     if (e.target !== modal) return;
     const r = modal.getBoundingClientRect();

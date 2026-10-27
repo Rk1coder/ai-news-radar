@@ -17,6 +17,8 @@ from ai_news_radar.models import Development, TelegramDelivery
 
 log = logging.getLogger(__name__)
 TELEGRAM_API_URL = "https://api.telegram.org/bot{token}/sendMessage"
+TITLE_LIMIT_CHARS = 180
+SUMMARY_LIMIT_CHARS = 320
 
 
 def enabled():
@@ -65,8 +67,8 @@ def _format_message(development: Development) -> str | None:
             return None
     except ValueError:
         return None
-    title = _compact(development.title_tr or raw.title, 180)
-    summary = _compact(development.summary_tr or raw.summary, 320)
+    title = _compact(development.title_tr or raw.title, TITLE_LIMIT_CHARS)
+    summary = _compact(development.summary_tr or raw.summary, SUMMARY_LIMIT_CHARS)
     summary = ' '.join(re.split(r'(?<=[.!?])\s+', summary)[:2])
     source = _compact(raw.source.name.replace('-', ' '), 60)
     date = ''

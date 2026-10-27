@@ -87,17 +87,22 @@ class ClassificationResult:
         )
 
 
-def classify(title: str, summary: str) -> ClassificationResult:
+def _call_llm_json(system_prompt: str, title: str, summary: str, max_tokens: int) -> dict:
+    """Calls the model with (title, summary) and parses its JSON reply, stripping any ```json fence."""
     client = Anthropic(api_key=ANTHROPIC_API_KEY)
     message = client.messages.create(
         model=CLASSIFIER_MODEL,
-        max_tokens=1024,
-        system=SYSTEM_PROMPT,
+        max_tokens=max_tokens,
+        system=system_prompt,
         messages=[{"role": "user", "content": f"Baslik: {title}\n\nOzet: {summary}"}],
     )
     raw_text = message.content[0].text.strip()
     raw_text = raw_text.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-    data = json.loads(raw_text)
+    return json.loads(raw_text)
+
+
+def classify(title: str, summary: str) -> ClassificationResult:
+    data = _call_llm_json(SYSTEM_PROMPT, title, summary, max_tokens=1024)
     return ClassificationResult(
         technical_impact_score=int(data["technical_impact_score"]),
         hype_score=int(data["hype_score"]),
@@ -126,14 +131,5 @@ SADECE geçerli JSON döndür, başka hiçbir metin ekleme:
 
 def translate(title: str, summary: str) -> tuple[str, str]:
     """Baslik/ozeti Turkceye cevirir - skorlari etkilemeden sadece ceviriyi yeniler."""
-    client = Anthropic(api_key=ANTHROPIC_API_KEY)
-    message = client.messages.create(
-        model=CLASSIFIER_MODEL,
-        max_tokens=1024,
-        system=TRANSLATE_SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": f"Baslik: {title}\n\nOzet: {summary}"}],
-    )
-    raw_text = message.content[0].text.strip()
-    raw_text = raw_text.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-    data = json.loads(raw_text)
+    data = _call_llm_json(TRANSLATE_SYSTEM_PROMPT, title, summary, max_tokens=1024)
     return str(data.get("title_tr", "")), str(data.get("summary_tr", ""))

@@ -17,6 +17,8 @@ from ai_news_radar.scheduler import next_slot
 
 _memory_lock = Lock()
 _SCAN_LOCK = 732891104
+HEARTBEAT_STALE_SECONDS = 120
+DIGEST_STALE_HOURS = 24
 
 
 def utc(value):
@@ -88,7 +90,9 @@ def scan_status(session):
     return {
         "enabled": enabled, "hours": SCAN_HOURS, "timezone": SCAN_TIMEZONE,
         "interval_minutes": settings["interval_minutes"],
-        "scheduler_online": bool(enabled and heartbeat and now - utc(heartbeat.seen_at) < timedelta(seconds=120)),
+        "scheduler_online": bool(
+            enabled and heartbeat and now - utc(heartbeat.seen_at) < timedelta(seconds=HEARTBEAT_STALE_SECONDS)
+        ),
         "next_run_at": iso(next_slot(now, settings["interval_minutes"])) if enabled else None,
         "last_scan": serialize_scan(latest) if latest else None,
         "last_successful_at": iso(successful.finished_at) if successful else None,
@@ -141,7 +145,7 @@ def run_scan(session_factory=get_session, connectors=None, *, scheduled_for=None
                 final_status = "failed" if not successes else "partial" if failed else "succeeded"
                 session.commit()
                 latest = session.query(WeeklyDigest).order_by(WeeklyDigest.id.desc()).first()
-                stale = latest is None or datetime.now(UTC) - utc(latest.generated_at) > timedelta(hours=24)
+                stale = latest is None or datetime.now(UTC) - utc(latest.generated_at) > timedelta(hours=DIGEST_STALE_HOURS)
                 if successes and (developments or stale) and session.query(Development.id).first():
                     try:
                         content, count = generate_weekly_digest(session)

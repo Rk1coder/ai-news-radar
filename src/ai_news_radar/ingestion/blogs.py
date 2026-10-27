@@ -12,6 +12,10 @@ from ai_news_radar.ingestion.base import FetchedItem, strip_html
 from ai_news_radar.ingestion.rss import USER_AGENT, select_recent
 
 
+TURKISH_MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+                   'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
+
+
 def read_page(url):
     response = requests.get(url, headers={'User-Agent': USER_AGENT}, timeout=30)
     response.raise_for_status()
@@ -116,8 +120,6 @@ class DogusBlogConnector(JsonLdBlogConnector):
 
     def fetch(self):
         soup = read_page(self.page_url)
-        months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-                  'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
         items = {}
         for card in soup.select('.clickable-card[data-url]'):
             title = card.select_one('h2, h5')
@@ -128,7 +130,7 @@ class DogusBlogConnector(JsonLdBlogConnector):
                 continue
             try:
                 day, month, year = date.get_text(' ', strip=True).split('|')[0].split()
-                published = datetime(int(year), months.index(month) + 1, int(day),
+                published = datetime(int(year), TURKISH_MONTHS.index(month) + 1, int(day),
                                      tzinfo=ZoneInfo('Europe/Istanbul')).astimezone(UTC).replace(tzinfo=None)
             except (ValueError, TypeError):
                 continue

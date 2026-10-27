@@ -1541,12 +1541,14 @@ dialog::backdrop {
     gap: 6px;
   }
   .refresh,
-  .topbar-actions #open-settings {
+  .topbar-actions #open-settings,
+  .topbar-actions .telegram-link {
     padding: 9px;
     width: 44px;
   }
   .refresh span,
-  .topbar-actions #open-settings span {
+  .topbar-actions #open-settings span,
+  .topbar-actions .telegram-link span {
     display: none;
   }
   .status-line {

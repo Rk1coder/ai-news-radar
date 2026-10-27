@@ -12,8 +12,10 @@
   --peach: #fbe1d1;
   --sienna: #5d2a1a;
   --error: #17191c;
+  --turquoise: #0a7f7c;
   --font-display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
   --font-ui: Inter, system-ui, sans-serif;
+  --font-brand: 'Audiowide', var(--font-ui);
   --radius-card: 24px;
   --radius-input: 16px;
   --radius-pill: 9999px;
@@ -162,7 +164,7 @@ a .icon {
 /* Live text wordmark: no background, icon, or raster image. */
 .brand { display: block; min-width: 0; }
 .wordmark { display: inline-flex; flex-direction: column; width: fit-content; color: var(--text); }
-.wordmark strong { font-family: var(--font-ui); font-size: 44px; font-weight: 800; letter-spacing: 0.035em; line-height: 1.05; }
+.wordmark strong { font-family: var(--font-brand); font-size: 34px; font-weight: 700; -webkit-text-stroke: 0.5px var(--turquoise); letter-spacing: 0.01em; line-height: 1.2; color: var(--turquoise); }
 .wordmark > span { font-family: var(--font-ui); font-size: 10px; font-weight: 500; letter-spacing: 0.17em; line-height: 1.5; margin-top: 5px; color: var(--muted); }
 .footer-brand { flex-shrink: 0; }
 .footer-brand strong { font-size: 24px; }

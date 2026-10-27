@@ -111,9 +111,35 @@
     render();
   }
 
+  function currentThemePref() {
+    try {
+      const t = localStorage.getItem("radar-theme");
+      return t === "light" || t === "dark" ? t : "system";
+    } catch {
+      return "system";
+    }
+  }
+  function applyTheme(pref) {
+    if (pref === "light" || pref === "dark") document.documentElement.dataset.theme = pref;
+    else delete document.documentElement.dataset.theme;
+    try {
+      localStorage.setItem("radar-theme", pref);
+    } catch {
+      /* theme still applies for this page load */
+    }
+  }
+  function renderTheme() {
+    const pref = currentThemePref();
+    document
+      .querySelectorAll('#theme-group input[name="theme-pref"]')
+      .forEach((r) => (r.checked = r.value === pref));
+  }
+  $("theme-group").addEventListener("change", (e) => applyTheme(e.target.value));
+
   function openSettings() {
     modal.showModal();
     $("custom-add-status").textContent = "";
+    renderTheme();
     load().catch((e) => {
       $("settings-footer-status").textContent = e.message;
       $("settings-footer").hidden = false;

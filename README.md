@@ -58,6 +58,13 @@ docker compose up -d --build        # tüm servisler
 docker compose up -d --build api    # sadece api (kod değişikliğinden sonra)
 ```
 
+### Başlat / durdur script'leri
+
+```bash
+./scripts/start.sh   # .env yoksa .env.example'dan oluşturur ve uyarır; varsa docker compose up -d --build
+./scripts/stop.sh    # docker compose down (imajlar ve .env korunur)
+```
+
 ### İnternetsiz (offline) ortamda çalıştırma
 
 **Build sırasında (`docker compose build`) internet gerekir:**

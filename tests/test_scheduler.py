@@ -46,3 +46,25 @@ def test_run_cycle_does_not_log_failure_when_scan_result_is_falsy():
         run_cycle(auto_scan_enabled=True, interval_minutes=0)
     run_scan.assert_called_once()
     publish_pending.assert_called_once()
+
+
+def test_email_is_scheduled_even_while_scan_worker_is_still_busy():
+    import ai_news_radar.scheduler as scheduler
+    started = []
+    class StopAfterTwo:
+        cycles = 0
+        def is_set(self): return self.cycles == 2
+        def wait(self, seconds): self.cycles += 1
+        def set(self): self.cycles = 2
+    class Worker:
+        def __init__(self, *, target, daemon, kwargs): self.target = target
+        def start(self): started.append(self.target.__name__)
+        def is_alive(self): return self.target.__name__ == 'run_cycle'
+        def join(self, timeout): pass
+    with patch('ai_news_radar.db.init_db'),patch('ai_news_radar.db.get_session'), \
+         patch('ai_news_radar.scans.effective_settings',return_value={'auto_scan_enabled':False,'interval_minutes':15}), \
+         patch.object(scheduler,'Event',StopAfterTwo),patch.object(scheduler,'Thread',Worker), \
+         patch.object(scheduler.signal,'signal'):
+        scheduler.main()
+    assert started.count('run_cycle') == 1
+    assert started.count('run_email_cycle') == 2

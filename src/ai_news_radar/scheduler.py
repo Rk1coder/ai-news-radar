@@ -60,6 +60,18 @@ def run_cycle(*, auto_scan_enabled: bool | None = None, interval_minutes: int | 
         log.warning("Telegram queue could not be processed: %s", type(exc).__name__)
 
 
+def run_email_cycle():
+    from ai_news_radar.db import get_session
+    from ai_news_radar.notifications.email import send_daily_digest
+
+    try:
+        with get_session() as session:
+            if send_daily_digest(session):
+                log.info("Daily digest email sent")
+    except Exception as exc:
+        log.warning("Daily digest email could not be sent: %s", type(exc).__name__)
+
+
 def main() -> None:
     from ai_news_radar.db import get_session, init_db
     from ai_news_radar.models import SchedulerHeartbeat
@@ -71,6 +83,7 @@ def main() -> None:
     for sig in (signal.SIGTERM, signal.SIGINT):
         signal.signal(sig, lambda *_: stop.set())
     worker = None
+    email_worker = None
     while not stop.is_set():
         settings = {"auto_scan_enabled": AUTO_SCAN_ENABLED, "interval_minutes": SCAN_INTERVAL_MINUTES}
         try:
@@ -88,9 +101,14 @@ def main() -> None:
                         "interval_minutes": settings["interval_minutes"], "program": settings.get("program")},
             )
             worker.start()
+        if email_worker is None or not email_worker.is_alive():
+            email_worker = Thread(target=run_email_cycle, daemon=True, kwargs={})
+            email_worker.start()
         stop.wait(30)
     if worker:
         worker.join(timeout=5)
+    if email_worker:
+        email_worker.join(timeout=5)
 
 
 if __name__ == "__main__":

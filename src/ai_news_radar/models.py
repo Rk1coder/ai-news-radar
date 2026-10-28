@@ -98,6 +98,30 @@ class WeeklyDigest(Base):
     generated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
 
 
+class EmailDigestLog(Base):
+    """One row per calendar day (local timezone) the daily email was sent - the send guard."""
+
+    __tablename__ = "email_digest_log"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    sent_date: Mapped[str] = mapped_column(String(10), unique=True)  # YYYY-MM-DD, SCAN_TIMEZONE
+    story_count: Mapped[int] = mapped_column(default=0)
+    sent_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
+class EmailDigestAttempt(Base):
+    """Atomic daily claim, backoff and uncertain SMTP outcomes survive restarts."""
+
+    __tablename__ = "email_digest_attempts"
+    sent_date: Mapped[str] = mapped_column(String(10), primary_key=True)
+    status: Mapped[str] = mapped_column(String(20))
+    attempts: Mapped[int] = mapped_column(default=1)
+    next_attempt_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_error: Mapped[str] = mapped_column(String(80), default="")
+    message_id: Mapped[str] = mapped_column(String(200))
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
 class ScanRun(Base):
     """Durable scan history; a zero-result scan is still a completed check."""
 

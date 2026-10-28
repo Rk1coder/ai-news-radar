@@ -27,6 +27,8 @@ ve Node/Express/EJS arayüzünden oluşur.
 - **Açık/koyu tema** — sistem tercihini izler, elle de değiştirilebilir.
 - **Telegram bildirimleri** — yeni kabul edilen haberleri bir Telegram kanalına/
   gruba otomatik gönderir.
+- **Günlük AI özeti e-postası** — günde bir kez, son 24 saatin öne çıkan
+  haberlerini zengin bir HTML e-postada derler (herhangi bir SMTP sunucusu).
 - **PWA desteği** — manifest + service worker ile yüklenebilir, statik arayüz
   varlıkları çevrimdışı da önbellekten sunulur.
 - **Haftalık özet** — son 7 günün en öne çıkan gelişmelerini LLM ile özetler.
@@ -89,6 +91,7 @@ yerel olarak paketlenir.
 | Radar Asistanı (sohbet) | Anthropic API + orijinal makale metnini kaynağın kendi URL'sinden çekme (`chat.py`). |
 | Link önizleme | Habere tıklayınca OG metadata'yı kaynağın URL'sinden çeker (`link_preview.py`). |
 | Telegram bildirimleri | `api.telegram.org` çağrısı. |
+| Günlük e-posta özeti | SMTP sunucusuna (Gmail, Proton Bridge vb.) bağlanma. |
 
 **İnternet gerektirmeyen (build sonrası tamamen yerel):** arayüzün statik dosyaları
 (CSS, JS, fontlar, ikonlar) ve bunların PWA service worker önbelleği.
@@ -200,6 +203,37 @@ Telegram açıkça hız limiti bildirirse `retry_after` kadar, geçici sunucu re
 
 Gönderimi durdurmak için `TELEGRAM_ENABLED=false` yapıp API ve scheduler'ı yeniden oluşturun. Kalıcı kuyruk korunur. Bot sırları hata günlüklerine yazılmaz. Resmî belgeler: [sendMessage](https://core.telegram.org/bots/api#sendmessage), [gönderim sınırları](https://core.telegram.org/bots/faq#my-bot-is-hitting-limits-how-do-i-avoid-this).
 
+## Günlük AI özeti e-postası
+
+Günde **16:00'da (Europe/Istanbul)** son 24 saatin en öncelikli 12 haberini Radar logosu, Türkçe özet, önem açıklaması ve kaynak bağlantılarıyla tek e-postada toplar. Gönderim haber taramasından bağımsız işçide yaklaşık 30 saniyede bir kontrol edilir. Logo gömülüdür; HTML ve düz metin sürümleri birlikte gönderilir. Kaynak politikasında uygun sayılan içerikler seçilir; bu durum bağımsız çapraz teyit anlamına gelmez. Eski yayınların yeni taranmış olması onları günlük haberlere dahil etmez.
+
+Bülten sınırı olaylar birleştirildikten sonra uygulanır: en öncelikli 80 aday arasındaki aynı duyuruya ait yayınlar tek başlıkta gösterilir, diğer kaynakları başlık altında korunur. Eşleştirme yereldir; model/sürüm/varyant, olay türü ve başlık/özet benzerliği kullanır. Sadece aynı şirketten olması haberleri birleştirmez. Farklı anlatımlardaki tüm tekrarları kusursuz tanıma garantisi yoktur.
+
+Proton/hydroxide kurulumu: [kurulum ve hesap bağlantısı](docs/proton-email.md). Normal SMTP için örnek:
+
+```dotenv
+EMAIL_ENABLED=true
+EMAIL_SMTP_HOST=smtp.gmail.com
+EMAIL_SMTP_PORT=587
+EMAIL_SMTP_SECURITY=starttls
+EMAIL_SMTP_USER=you@gmail.com
+EMAIL_SMTP_PASSWORD=   # Gmail: myaccount.google.com/apppasswords
+EMAIL_FROM=you@gmail.com
+EMAIL_RECIPIENTS=you@example.com,someone@example.com
+EMAIL_SEND_HOUR=16
+EMAIL_PUBLIC_URL=https://your-radar-domain.example
+```
+
+Ayarladıktan sonra `docker compose up -d --build api scheduler` çalıştırın. Gönderim durumu ve saati beklemeden hemen test etmek için:
+
+```bash
+docker compose exec -T scheduler python -m ai_news_radar.notifications.email             # durum
+docker compose exec -T scheduler python -m ai_news_radar.notifications.email --send-now   # hemen gönder
+```
+
+`--send-now` yalnızca saat kontrolünü atlar; günlük geçmişi silmez. Önizleme için `python -m ai_news_radar.notifications.email --preview outputs/radar-daily-email.html` kullanın; bu komut e-posta göndermez.
+
+`email_digest_attempts` tablosu SMTP'den önce günlük gönderimi atomik olarak sahiplenir. Açıkça reddedilen gönderimler 5 dakika sonra tekrar denenir; SMTP kabul ettikten sonra bağlantının sonucu belirsizse otomatik tekrar durur. `sending`/`uncertain` durumunda Proton Gönderilenler klasörü kontrol edilmelidir. SMTP uçtan uca tam-bir-kez teslim garantisi vermez. `email_digest_log` yalnızca SMTP'nin kabul ettiği gönderimi kaydeder; alıcının gelen kutusuna ulaştığını doğrulamaz.
 
 ### Son kaynaklar ve elle güncelleme
 

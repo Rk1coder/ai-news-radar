@@ -9,6 +9,16 @@ services:
       TELEGRAM_ENABLED: ${TELEGRAM_ENABLED:-false}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-false}
+      EMAIL_SMTP_HOST: ${EMAIL_SMTP_HOST:-}
+      EMAIL_SMTP_PORT: ${EMAIL_SMTP_PORT:-587}
+      EMAIL_SMTP_SECURITY: ${EMAIL_SMTP_SECURITY:-starttls}
+      EMAIL_PUBLIC_URL: ${EMAIL_PUBLIC_URL:-}
+      EMAIL_SMTP_USER: ${EMAIL_SMTP_USER:-}
+      EMAIL_SMTP_PASSWORD: ${EMAIL_SMTP_PASSWORD:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      EMAIL_RECIPIENTS: ${EMAIL_RECIPIENTS:-}
+      EMAIL_SEND_HOUR: ${EMAIL_SEND_HOUR:-16}
       AUTO_SCAN_ENABLED: ${AUTO_SCAN_ENABLED:-true}
       SCAN_TIMEZONE: ${SCAN_TIMEZONE:-Europe/Istanbul}
       SCAN_HOURS: ${SCAN_HOURS:-6,10,14,18,22}
@@ -32,6 +42,16 @@ services:
       TELEGRAM_ENABLED: ${TELEGRAM_ENABLED:-false}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-false}
+      EMAIL_SMTP_HOST: ${EMAIL_SMTP_HOST:-}
+      EMAIL_SMTP_PORT: ${EMAIL_SMTP_PORT:-587}
+      EMAIL_SMTP_SECURITY: ${EMAIL_SMTP_SECURITY:-starttls}
+      EMAIL_PUBLIC_URL: ${EMAIL_PUBLIC_URL:-}
+      EMAIL_SMTP_USER: ${EMAIL_SMTP_USER:-}
+      EMAIL_SMTP_PASSWORD: ${EMAIL_SMTP_PASSWORD:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      EMAIL_RECIPIENTS: ${EMAIL_RECIPIENTS:-}
+      EMAIL_SEND_HOUR: ${EMAIL_SEND_HOUR:-16}
       AUTO_SCAN_ENABLED: ${AUTO_SCAN_ENABLED:-true}
       SCAN_TIMEZONE: ${SCAN_TIMEZONE:-Europe/Istanbul}
       SCAN_HOURS: ${SCAN_HOURS:-6,10,14,18,22}
@@ -39,6 +59,15 @@ services:
     depends_on:
       api:
         condition: service_healthy
+
+  hydroxide:
+    profiles: [proton]
+    build: ./deploy/hydroxide
+    restart: unless-stopped
+    volumes:
+      - hydroxide-auth:/data
+    # No host port: SMTP is reachable only inside the Compose network.
+    expose: ["1025"]
 
   frontend:
     build: ./frontend
@@ -50,3 +79,6 @@ services:
       - "3000:3000"
     depends_on:
       - api
+
+volumes:
+  hydroxide-auth:

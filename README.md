@@ -4,7 +4,34 @@ Yapay zekâ ve yakın teknoloji haberlerini kaynaklardan toplayan, sınıflandı
 haber bağlamında sohbet sunan uygulama. Python/FastAPI API, PostgreSQL veritabanı
 ve Node/Express/EJS arayüzünden oluşur.
 
-## Başlatma
+## Ekran görüntüleri
+
+| Ana sayfa (açık tema) | Ana sayfa (koyu tema) |
+| --- | --- |
+| ![Ana sayfa, açık tema](docs/screenshots/dashboard-light.jpg) | ![Ana sayfa, koyu tema](docs/screenshots/dashboard-dark.jpg) |
+
+| Radar Asistanı (haber bağlamında sohbet) | Ayarlar paneli |
+| --- | --- |
+| ![Radar Asistanı sohbet paneli](docs/screenshots/chat-assistant.jpg) | ![Ayarlar paneli](docs/screenshots/settings-panel.jpg) |
+
+## Öne çıkan özellikler
+
+- **Otomatik haber taraması** — arXiv, Hugging Face, GitHub, Reddit, bloglar ve daha
+  fazlası dahil onlarca kaynağı varsayılan olarak 15 dakikada bir tarar.
+- **LLM ile sınıflandırma ve Türkçe çeviri** — her haberi teknik etki/hype/
+  uygulanabilirlik eksenlerinde puanlar, sektör etiketler ve akıcı Türkçeye çevirir.
+- **Haber bağlamında sohbet (Radar Asistanı)** — seçili haberin başlığı, özeti ve
+  orijinal makale metnine dayanarak soru-cevap yapar.
+- **Konu/anahtar kelime arama** — Türkçe ve İngilizce eşleşen terimlerle arama,
+  sektör/kaynak/öncelik filtreleri.
+- **Açık/koyu tema** — sistem tercihini izler, elle de değiştirilebilir.
+- **Telegram bildirimleri** — yeni kabul edilen haberleri bir Telegram kanalına/
+  gruba otomatik gönderir.
+- **PWA desteği** — manifest + service worker ile yüklenebilir, statik arayüz
+  varlıkları çevrimdışı da önbellekten sunulur.
+- **Haftalık özet** — son 7 günün en öne çıkan gelişmelerini LLM ile özetler.
+
+## Kurulum (Docker)
 
 ```bash
 cp .env.example .env   # ANTHROPIC_API_KEY değerini doldur
@@ -13,6 +40,34 @@ docker compose up -d --build
 ```
 
 Arayüz: http://localhost:3000 · API: http://localhost:8008
+
+Servisler: `postgres` (veritabanı), `api` (FastAPI), `scheduler` (otomatik tarama),
+`frontend` (Node/Express arayüz). Hepsi `docker-compose.yml` içinde tanımlı,
+tek komutla ayağa kalkar.
+
+Değişiklik sonrası yeniden derleme gerekir (imajlar volume mount kullanmaz):
+
+```bash
+docker compose up -d --build        # tüm servisler
+docker compose up -d --build api    # sadece api (kod değişikliğinden sonra)
+```
+
+### İnternetsiz (offline) ortamda çalıştırma
+
+İmajlar bir kez derlendikten (`docker compose build`, internet gerektirir — Python/
+Node bağımlılıkları ve temel imajlar bu adımda indirilir) sonra `docker compose up`
+ile **tekrar internete ihtiyaç duymadan** ayağa kaldırılabilir: imajlar yerel Docker
+önbelleğinden çalışır, veritabanı kalıcı bir volume'da tutulur. Arayüz artık
+Google Fonts gibi bir CDN'e de bağımlı değil — tüm fontlar (`frontend/public/fonts/`)
+imajın içinde yerel olarak paketlenir.
+
+Bununla birlikte **uygulamanın kendi işlevi internet gerektirir**: yeni haber taraması
+(RSS/Atom kaynakları), LLM sınıflandırma/çeviri ve sohbet (Anthropic API) ve Telegram
+bildirimleri için dış ağ erişimi şarttır. İnternetsiz bir ortamda arayüz açılır ve
+**daha önce taranmış kayıtlar** görüntülenebilir, ancak yeni tarama/sınıflandırma/
+sohbet yanıtı alınamaz. Bunu tamamen offline bir "demo" olarak çalıştırmak isterseniz
+önceden doldurulmuş bir veritabanı imajı (`pg_dump`/`pg_restore`) ile birlikte
+dağıtmanız gerekir.
 
 ## Otomatik haber akışı
 

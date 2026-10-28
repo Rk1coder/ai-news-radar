@@ -60,20 +60,39 @@ docker compose up -d --build api    # sadece api (kod değişikliğinden sonra)
 
 ### İnternetsiz (offline) ortamda çalıştırma
 
-İmajlar bir kez derlendikten (`docker compose build`, internet gerektirir — Python/
-Node bağımlılıkları ve temel imajlar bu adımda indirilir) sonra `docker compose up`
-imajları yerel Docker önbelleğinden çalıştırır; Google Fonts gibi bir CDN'e de
-bağımlılık yoktur — tüm fontlar (`frontend/public/fonts/`) imajın içinde yerel
-olarak paketlenir.
+**Build sırasında (`docker compose build`) internet gerekir:**
 
-Ancak veritabanı artık **uzak** olduğu için (yukarıya bakın), arayüzün **herhangi bir
-kaydı görüntülemesi dahi internet gerektirir** — eski/yeni fark etmez. Buna ek olarak
-yeni haber taraması (RSS/Atom kaynakları), LLM sınıflandırma/çeviri ve sohbet
-(Anthropic API) ve Telegram bildirimleri için de dış ağ erişimi şarttır. Yani bu
-kurulumla internetsiz bir ortamda uygulama **hiç açılmaz**. Tamamen offline
+- Temel Docker imajları (`python:3.12-slim`, `node:22-alpine`) — Docker Hub'dan.
+- `pip install -e .` — Python bağımlılıkları (sqlalchemy, anthropic, fastapi, requests,
+  feedparser, beautifulsoup4 vb.) PyPI'dan.
+- `npm install` — Node bağımlılıkları npm registry'den.
+
+Bunlar yalnızca **ilk build'de** gerekir; imaj bir kez oluşunca `docker compose up`
+tekrar internet istemeden yerel Docker önbelleğinden çalışır. Arayüz de Google Fonts
+gibi bir CDN'e bağımlı değil — tüm fontlar (`frontend/public/fonts/`) imajın içinde
+yerel olarak paketlenir.
+
+**Çalışma zamanında (build bittikten sonra bile) internet gerekir:**
+
+| Bölüm | Neden |
+| --- | --- |
+| Veritabanı (her şey) | `DATABASE_URL` uzak bir Postgres'e (örn. Neon) işaret ediyor — bir haberi **görüntülemek** bile internet ister. |
+| Yeni haber taraması | RSS/Atom kaynakları (arXiv, GitHub, Reddit, bloglar...) dış sunuculardan çekiliyor. |
+| LLM sınıflandırma/çeviri | Her yeni haberde `api.anthropic.com` çağrısı. |
+| Radar Asistanı (sohbet) | Anthropic API + orijinal makale metnini kaynağın kendi URL'sinden çekme (`chat.py`). |
+| Link önizleme | Habere tıklayınca OG metadata'yı kaynağın URL'sinden çeker (`link_preview.py`). |
+| Telegram bildirimleri | `api.telegram.org` çağrısı. |
+
+**İnternet gerektirmeyen (build sonrası tamamen yerel):** arayüzün statik dosyaları
+(CSS, JS, fontlar, ikonlar) ve bunların PWA service worker önbelleği.
+
+Özetle: veritabanı uzak olduğu için bu kurulumla **tamamen offline bir ortamda
+uygulama hiç açılmaz** — en azından DB'ye ulaşmak şart. Tamamen offline/air-gapped
 çalışması gereken bir demo için `DATABASE_URL`'i yerel bir Postgres'e (veya
 `docker-compose.yml`'e eklenecek bir `postgres` servisine) yönlendirip veriyi
-`pg_dump`/`pg_restore` ile o yerel veritabanına taşımanız gerekir.
+`pg_dump`/`pg_restore` ile o yerel veritabanına taşımanız gerekir — ama bu durumda
+"her bilgisayardan aynı veriye eriş" özelliğinden vazgeçmiş olursunuz; ikisi
+birbirini dışlar.
 
 ## Otomatik haber akışı
 

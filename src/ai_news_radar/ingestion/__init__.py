@@ -156,14 +156,21 @@ def youtube_and_community_connectors() -> list[Connector]:
                      source_type='media', **recent),
         RssConnector('yt-ai-jason', youtube + 'UCrXSVX9a1mj8l0CMLwKgMVw',
                      source_type='media', **recent),
-        # Karar: Reddit'in anonim rate limiti IP basina, subreddit basina degil - 7 ayri
-        # istek yerine Reddit'in kendi "+" ile coklu subreddit birlestirme ozelligiyle
-        # TEK istekte topluyoruz (daha once her subreddit ayri connector'di, hepsi ayni
-        # taramada art arda 429/403 aliyordu).
+        RssConnector('yt-vllm-office-hours',
+                     'https://www.youtube.com/feeds/videos.xml?playlist_id=PLbMP1JcGBmSHxp4-lubU5WYmJ9YgAQcf3',
+                     source_type='media', **recent),
+        RssConnector('yt-matt-williams', youtube + 'UCHaF9kM2wn8C3CLRwLkC2GQ',
+                     source_type='media', **recent),
+        RssConnector('yt-matthew-berman', youtube + 'UCawZsQWqfGSbCI5yjkdVkTA',
+                     source_type='media', **recent),
+        RssConnector('yt-sam-witteveen', youtube + 'UC55ODQSvARtgSyc8ThfiepQ',
+                     source_type='media', **recent),
+        # Reddit limits anonymous traffic per IP: combine communities in one request.
+        # r/LLM is about law degrees, so AI coverage uses LocalLLaMA and LocalLLM.
         RssConnector(
             'reddit-ai-communities',
             'https://www.reddit.com/r/LocalLLaMA+MachineLearning+artificial+singularity'
-            '+OpenAI+StableDiffusion+ChatGPT/new/.rss?limit=100',
+            '+OpenAI+StableDiffusion+ChatGPT+Vllm+LocalLLM/new/.rss?limit=100',
             **reddit,
         ),
         RssConnector('huggingface-forum', 'https://discuss.huggingface.co/latest.rss',

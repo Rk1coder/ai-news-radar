@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 
@@ -77,6 +79,7 @@ class ChatRequest(BaseModel):
 class ScanSettingsUpdate(BaseModel):
     interval_minutes: int | None = None
     auto_scan_enabled: bool | None = None
+    program: Any = None
 
 
 class SourceToggleUpdate(BaseModel):
@@ -144,7 +147,7 @@ def get_settings_route():
 @app.put("/api/settings/scan")
 def update_scan_settings_route(payload: ScanSettingsUpdate):
     with get_session() as session:
-        update_scan_settings(session, **payload.model_dump())
+        update_scan_settings(session, **payload.model_dump(exclude_unset=True))
         session.commit()
         return get_settings(session)
 

@@ -20,6 +20,7 @@
     messages = $("chat-messages"),
     scroll = $("chat-scroll");
   const mobile = matchMedia("(max-width: 900px)");
+  const assistantMotion = window.createAssistantMotion?.(panel);
   let activeId = null,
     returnFocus = null,
     visibleCount = 15;
@@ -52,6 +53,13 @@
     const modal = !panel.hidden && mobile.matches;
     document.body.classList.toggle("chat-open", modal);
     page.inert = modal;
+    $("page-header").inert = modal;
+    const anchor = $("assistant-launcher").getBoundingClientRect();
+    panel.style.setProperty("--assistant-top", `${Math.max(16, Math.min(anchor.bottom + 12, window.innerHeight - 260))}px`);
+    document.querySelectorAll('.open-assistant, [data-action="chat"]').forEach((button) => {
+      button.setAttribute("aria-controls", "assistant");
+      button.setAttribute("aria-expanded", String(!panel.hidden));
+    });
     if (modal) {
       panel.setAttribute("role", "dialog");
       panel.setAttribute("aria-modal", "true");
@@ -74,6 +82,7 @@
     }
   }
   function openChat(dev, trigger, focus = true) {
+    const source = $("assistant-launcher").getBoundingClientRect();
     if (dev) activeId = String(dev.id);
     if (trigger) returnFocus = trigger;
     panel.hidden = false;
@@ -83,12 +92,19 @@
       el.classList.toggle("is-active", el.dataset.id === activeId),
     );
     renderConversation();
+    assistantMotion?.open(source);
     if (focus)
-      requestAnimationFrame(() =>
-        (activeId ? input : $("close-chat")).focus({ preventScroll: true }),
-      );
+      requestAnimationFrame(() => {
+        if (!panel.hidden && !assistantMotion?.isClosing())
+          (activeId ? input : $("close-chat")).focus({ preventScroll: true });
+      });
   }
   function closeChat() {
+    if (panel.hidden) return;
+    if (assistantMotion) assistantMotion.close(finishCloseChat, $("assistant-launcher").getBoundingClientRect());
+    else finishCloseChat();
+  }
+  function finishCloseChat() {
     panel.hidden = true;
     document.body.classList.remove("has-assistant");
     setPanelSemantics();
@@ -101,7 +117,7 @@
     .querySelectorAll(".open-assistant")
     .forEach((button) =>
       button.addEventListener("click", () =>
-        openChat(
+        !panel.hidden && !assistantMotion?.isClosing() ? closeChat() : openChat(
           developments.get(activeId) || developments.values().next().value,
           button,
         ),
@@ -619,6 +635,7 @@
       "Çevrimdışısın. Bağlantı geldiğinde haberler otomatik güncellenecek.";
   });
   window.addEventListener("pageshow", () => poller.check());
+  setPanelSemantics();
   if (!mobile.matches)
     openChat(developments.values().next().value, null, false);
 })();

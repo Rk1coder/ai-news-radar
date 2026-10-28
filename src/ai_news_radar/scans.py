@@ -11,7 +11,8 @@ from ai_news_radar.classification.digest import generate_weekly_digest
 from ai_news_radar.config import AUTO_SCAN_ENABLED, SCAN_HOURS, SCAN_TIMEZONE, SCAN_INTERVAL_MINUTES
 from ai_news_radar.db import get_session
 from ai_news_radar.ingestion import active_connectors
-from ai_news_radar.models import AppSettings, Development, ScanRun, SchedulerHeartbeat, WeeklyDigest
+from ai_news_radar.models import AppSettings, Development, ScanProgram, ScanRun, SchedulerHeartbeat, WeeklyDigest
+from ai_news_radar.scan_program import default_program
 from ai_news_radar.pipeline import run_pipeline
 from ai_news_radar.scheduler import next_slot
 
@@ -74,9 +75,12 @@ def serialize_scan(run):
 def effective_settings(session):
     """Karar: Ayarlar panelinden kaydedilen deger varsa onu, yoksa config.py varsayilanini kullanir."""
     row = session.get(AppSettings, 1)
+    program = session.get(ScanProgram, 1)
     return {
         "interval_minutes": row.scan_interval_minutes if row and row.scan_interval_minutes is not None else SCAN_INTERVAL_MINUTES,
         "auto_scan_enabled": row.auto_scan_enabled if row and row.auto_scan_enabled is not None else AUTO_SCAN_ENABLED,
+        "program": program.program if program else default_program(),
+        "timezone": SCAN_TIMEZONE,
     }
 
 
@@ -93,7 +97,7 @@ def scan_status(session):
         "scheduler_online": bool(
             enabled and heartbeat and now - utc(heartbeat.seen_at) < timedelta(seconds=HEARTBEAT_STALE_SECONDS)
         ),
-        "next_run_at": iso(next_slot(now, settings["interval_minutes"])) if enabled else None,
+        "next_run_at": iso(next_slot(now, settings["interval_minutes"], settings["program"])) if enabled else None,
         "last_scan": serialize_scan(latest) if latest else None,
         "last_successful_at": iso(successful.finished_at) if successful else None,
     }

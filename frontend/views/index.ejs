@@ -7,20 +7,21 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <script>try{var t=localStorage.getItem("radar-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
 <script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js")})}</script>
-<link rel="stylesheet" href="/styles.css"><script defer src="/chat-state.js"></script><script defer src="/live-feed.js"></script><script defer src="/app.js"></script><script defer src="/settings.js"></script>
+<link rel="stylesheet" href="/styles.css?v=scan-program-20261028"><script defer src="/chat-state.js"></script><script defer src="/live-feed.js"></script><script defer src="/vendor/gsap.min.js?v=3.15.0"></script><script defer src="/assistant-motion.js?v=assistant-topbar-20261028"></script><script defer src="/app.js?v=assistant-topbar-20261028"></script><script defer src="/settings-motion.js?v=settings-20261028-1"></script><script defer src="/scan-program.js?v=scan-program-20261028"></script><script defer src="/settings.js?v=scan-program-20261028"></script>
 </head>
 <body>
 <a class="skip-link" href="#news-list">Haberlere geç</a>
-<div class="page" id="page-content">
-  <header class="topbar">
+  <header class="topbar page-topbar" id="page-header">
     <a class="brand wordmark" href="/" aria-label="Radar ana sayfa"><strong>RADAR</strong><span>AI NEWS DETECT &amp; BLOG</span></a>
     <div class="topbar-actions">
       <form action="/refresh" method="post" id="refresh-form"><button class="button subtle refresh" type="submit" aria-label="Haberleri güncelle"><%- icon('arrows-clockwise') %><span>Güncelle</span></button></form>
       <a class="button subtle telegram-link" href="https://t.me/+PLz5p6UnqV03NmFk" target="_blank" rel="noopener noreferrer"><%- icon('telegram-logo') %><span>Telegram</span></a>
-      <button class="button subtle" type="button" id="open-settings"><%- icon('sliders-horizontal') %><span>Ayarlar</span></button>
+      <button class="button subtle settings-trigger" type="button" id="open-settings" aria-label="Ayarları aç" aria-haspopup="dialog" aria-expanded="false" aria-controls="settings-modal"><%- icon('sliders-horizontal') %><span>Ayarlar</span></button>
+      <button class="assistant-launcher button subtle open-assistant" id="assistant-launcher" type="button" aria-label="Radar Asistanı’nı aç" aria-expanded="false" aria-controls="assistant"><%- icon('sparkle') %><span>Radar Asistanı</span></button>
     </div>
   </header>
-  <div class="status-line"><div id="scan-status" data-running="<%= scanLabels.running %>" data-status="<%= scanLabels.outcome %>" data-count="<%= scanLabels.newCount %>"><span><%= total_count %> kayıt · <%= scanLabels.status %></span><small><%= scanLabels.schedule %></small></div><button class="text-button open-assistant" type="button"><%- icon('sparkle') %> Radar Asistanı</button></div>
+<div class="page" id="page-content">
+  <div class="status-line"><div id="scan-status" data-running="<%= scanLabels.running %>" data-status="<%= scanLabels.outcome %>" data-count="<%= scanLabels.newCount %>"><span><%= total_count %> kayıt · <%= scanLabels.status %></span><small><%= scanLabels.schedule %></small></div></div>
   <div id="refresh-message" class="notice" role="status" hidden></div>
   <% if(typeof refreshStarted !== "undefined" && refreshStarted) { %><div class="notice" role="status">Tarama başladı. Yeni haberler hazır olduğunda otomatik görünecek.</div><% } %>
   <% if(refreshBusy) { %><div class="notice" role="status">Tarama zaten devam ediyor. Yeni haberler hazır olduğunda otomatik görünecek.</div><% } %>
@@ -98,7 +99,9 @@
   <footer class="page-footer"><a class="wordmark footer-brand" href="/" aria-label="Radar ana sayfa"><strong>RADAR</strong><span>AI NEWS DETECT &amp; BLOG</span></a><span>Kaynağı incele. Bağlamı anla.</span></footer>
 </div>
 <aside class="assistant" id="assistant" aria-labelledby="assistant-title" hidden>
-  <header class="assistant-header"><div class="assistant-name"><%- icon('sparkle') %><h2 id="assistant-title">Radar Asistanı</h2></div><button type="button" class="icon-button" id="close-chat" aria-label="Sohbeti kapat"><%- icon('x') %></button><p>Gündemi birlikte anlamlandıralım.</p></header>
+  <header class="assistant-header"><div class="assistant-name"><%- icon('sparkle') %><h2 id="assistant-title">Radar Asistanı</h2></div><button type="button" class="icon-button" id="close-chat" aria-label="Sohbeti kapat"><%- icon('x') %></button></header>
+  <div class="assistant-content">
+  <p class="assistant-tagline">Gündemi birlikte anlamlandıralım.</p>
   <div class="chat-context" id="chat-context" hidden><span class="eyebrow">BU HABER HAKKINDA</span><h3 id="chat-title"></h3><div class="context-meta"><span id="chat-source"></span><a id="chat-link" target="_blank" rel="noopener noreferrer">Kaynağı aç <%- icon('arrow-up-right') %></a></div></div>
   <div class="chat-scroll" id="chat-scroll" tabindex="0" aria-label="Sohbet mesajları">
     <div class="chat-welcome" id="chat-welcome"><img src="/radar.svg" width="60" height="60" alt=""><h3>Haberin bir adım ötesine geç.</h3><p>Teknik yenilikleri, arka planı ve pratik etkileri birlikte inceleyelim.</p><span class="welcome-tip" id="welcome-tip">Başlamak için bir haberin “Soru sor” düğmesine dokun.</span></div>
@@ -109,23 +112,25 @@
     <div class="suggestions" id="suggestions"><span>Bir soruyla başla</span><div><button type="button" data-question="Bu gelişmeyi kısaca özetler misin?">Kısaca özetle</button><button type="button" data-question="Bu gelişmenin teknik yeniliği ne?">Teknik yenilik ne?</button><button type="button" data-question="Bu gelişme kimler için önemli?">Kimler için önemli?</button></div></div>
     <form id="chat-form"><label class="sr-only" for="chat-input">Haber hakkında sorunuz</label><div class="composer"><textarea id="chat-input" rows="2" maxlength="4000" placeholder="Bu haber hakkında bir soru sor…" disabled></textarea><button class="send-button" id="send-chat" type="submit" aria-label="Soruyu gönder" disabled><%- icon('paper-plane-tilt') %></button></div><p class="composer-help"><%- icon('info') %><span>Yanıtlar seçili haberin bağlamına dayanır.</span></p></form>
   </div>
+  </div>
 </aside>
-<button class="assistant-launcher button primary open-assistant" id="assistant-launcher" type="button" aria-label="Radar Asistanı’nı aç"><%- icon('sparkle') %><span>Radar Asistanı</span></button>
 <dialog id="preview-modal" aria-labelledby="preview-title"><button class="icon-button preview-close" type="button" aria-label="Önizlemeyi kapat"><%- icon('x') %></button><div class="preview-inner"><img id="preview-image" alt="" hidden><span id="preview-meta" class="eyebrow"></span><h2 id="preview-title"></h2><p id="preview-summary"></p><div class="preview-actions"><a id="preview-link" class="button primary" target="_blank" rel="noopener noreferrer">Habere git <%- icon('arrow-up-right') %></a><button type="button" class="button subtle" id="preview-ask"><%- icon('chat-circle') %> Asistana sor</button></div></div></dialog>
 <dialog id="settings-modal" aria-labelledby="settings-title">
-  <button class="icon-button preview-close" type="button" id="close-settings" aria-label="Ayarları kapat"><%- icon('x') %></button>
+  <header class="settings-island">
+    <div class="settings-island-heading"><span class="settings-emblem" aria-hidden="true"><i></i><i></i><i></i><i></i></span><h2 id="settings-title">Ayarlar</h2></div>
+    <button class="icon-button settings-close" type="button" id="close-settings" aria-label="Ayarları kapat" autofocus><span class="settings-escape" aria-hidden="true">Esc</span><%- icon('x') %></button>
+  </header>
   <div class="settings-inner">
     <div class="settings-shell">
-      <nav class="settings-nav" aria-label="Ayarlar kategorileri">
-        <h2 id="settings-title">Ayarlar</h2>
-        <button type="button" class="settings-nav-item is-active" data-panel="scan">Tarama</button>
-        <button type="button" class="settings-nav-item" data-panel="sources">Kaynaklar</button>
-        <button type="button" class="settings-nav-item" data-panel="custom">Özel kaynak</button>
-        <button type="button" class="settings-nav-item" data-panel="appearance">Görünüm</button>
+      <nav class="settings-nav" role="tablist" aria-label="Ayarlar kategorileri" aria-orientation="vertical">
+        <% [['scan','Tarama','clock'],['sources','Kaynaklar','broadcast'],['custom','Özel kaynak','rss'],['appearance','Görünüm','sun-dim']].forEach(([panel,label,symbol], index)=>{ %>
+        <button type="button" role="tab" class="settings-nav-item<%= index===0?' is-active':'' %>" id="settings-tab-<%= panel %>" data-panel="<%= panel %>" aria-controls="settings-panel-<%= panel %>" aria-selected="<%= index===0 %>" tabindex="<%= index===0?0:-1 %>"><span class="settings-nav-label"><%- icon(symbol) %><span><%= label %></span></span><span class="settings-nav-number" aria-hidden="true">0<%= index+1 %></span></button>
+        <% }) %>
       </nav>
       <div class="settings-main">
+        <div class="settings-load-notice" id="settings-load-notice" hidden><span id="settings-load-status" role="status"></span><button type="button" class="text-button" id="settings-retry" hidden>Yeniden dene</button></div>
         <div class="settings-body" id="settings-body">
-          <section class="settings-section" data-panel="scan">
+          <section class="settings-section" id="settings-panel-scan" role="tabpanel" aria-labelledby="settings-tab-scan" tabindex="0" data-panel="scan">
             <h3>Tarama sıklığı</h3>
             <div class="settings-row">
               <div class="settings-row-text">
@@ -138,20 +143,43 @@
                 <% }) %>
               </div>
             </div>
+            <div class="scan-program-editor" id="scan-program-editor" hidden>
+              <p class="program-help">Her gün seçtiğin saatlerde ve aralıklarda taranır. Aynı saate denk gelen kurallar tek tarama olarak uygulanır.</p>
+              <p class="program-timezone">Saat dilimi: <span id="program-timezone">Europe/Istanbul</span></p>
+              <fieldset class="program-section">
+                <legend>Belirli saatler</legend>
+                <div class="program-time-list" id="program-time-list" aria-label="Programdaki tarama saatleri"></div>
+                <p class="program-empty" id="program-times-empty">Henüz saat eklenmedi.</p>
+                <div class="program-add-time"><label class="settings-field" for="program-time">Tarama saati<input type="time" id="program-time" step="60"></label><button class="button subtle" id="program-add-time" type="button">Saat ekle</button></div>
+              </fieldset>
+              <fieldset class="program-section">
+                <legend>Zaman aralıkları</legend>
+                <div id="program-window-list" class="program-window-list" aria-label="Programdaki zaman aralıkları"></div>
+                <p class="program-empty" id="program-windows-empty">Henüz zaman aralığı eklenmedi.</p>
+                <div class="program-window-fields">
+                  <label class="settings-field" for="program-start">Başlangıç<input type="time" id="program-start" value="09:00" step="60"></label>
+                  <label class="settings-field" for="program-end">Bitiş<input type="time" id="program-end" value="18:00" step="60"></label>
+                  <label class="settings-field" for="program-cadence">Tekrar<select id="program-cadence"><% [5,10,15,20,30,60].forEach(value=>{ %><option value="<%= value %>" <%= value===15?'selected':'' %>><%= value %> dk</option><% }) %></select></label>
+                </div>
+                <button class="button subtle" id="program-add-window" type="button">Aralık ekle</button>
+                <p class="program-help">Bitiş başlangıçtan erkense ertesi güne uzanır. Bitiş saatine denk gelen tarama da çalışır.</p>
+              </fieldset>
+              <p class="program-error" id="program-error" role="alert" hidden></p>
+            </div>
             <div class="settings-row">
               <div class="settings-row-text">
                 <span class="row-label">Otomatik tarama <span class="badge-changed" id="auto-scan-changed" hidden>Değişti</span></span>
                 <span class="row-desc">Kapatırsan sadece "Güncelle" düğmesiyle tarama yapılır.</span>
               </div>
-              <span class="switch"><input type="checkbox" id="auto-scan-enabled"></span>
+              <span class="switch"><input type="checkbox" id="auto-scan-enabled" aria-label="Otomatik tarama"></span>
             </div>
           </section>
-          <section class="settings-section" data-panel="sources" hidden>
+          <section class="settings-section" id="settings-panel-sources" role="tabpanel" aria-labelledby="settings-tab-sources" tabindex="0" data-panel="sources" hidden>
             <h3>Kaynaklar</h3>
-            <input type="search" id="source-filter" class="settings-field" placeholder="Kaynaklarda ara…">
+            <input type="search" id="source-filter" class="settings-field" placeholder="Kaynaklarda ara…" aria-label="Kaynaklarda ara">
             <div class="source-list" id="source-list"></div>
           </section>
-          <section class="settings-section" data-panel="custom" hidden>
+          <section class="settings-section" id="settings-panel-custom" role="tabpanel" aria-labelledby="settings-tab-custom" tabindex="0" data-panel="custom" hidden>
             <h3>Özel kaynak ekle</h3>
             <form id="custom-source-form">
               <label class="settings-field">İsim<input type="text" id="custom-name" required></label>
@@ -170,7 +198,7 @@
             </form>
             <div class="source-list" id="custom-source-list"></div>
           </section>
-          <section class="settings-section" data-panel="appearance" hidden>
+          <section class="settings-section" id="settings-panel-appearance" role="tabpanel" aria-labelledby="settings-tab-appearance" tabindex="0" data-panel="appearance" hidden>
             <h3>Görünüm</h3>
             <div class="settings-row">
               <div class="settings-row-text">

@@ -231,8 +231,8 @@ a .icon {
 .page {
   max-width: 1200px;
   margin: auto;
-  padding: 32px 40px 40px;
-  transition: margin-right 0.2s;
+  padding: 0 40px 40px;
+  transition: margin-right 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .has-assistant .page {
   max-width: none;
@@ -244,6 +244,14 @@ a .icon {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+}
+.page-topbar {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 40px 0;
+}
+.page-topbar .brand {
+  flex-shrink: 0;
 }
 .topbar-actions {
   display: flex;
@@ -280,9 +288,6 @@ a .icon {
   padding: 5px 0;
   font-size: 12px;
   min-height: 44px;
-}
-.has-assistant .status-line .open-assistant {
-  visibility: hidden;
 }
 .button {
   min-height: 44px;
@@ -739,25 +744,42 @@ a .icon {
 .assistant {
   position: fixed;
   right: 20px;
-  top: 20px;
+  top: var(--assistant-top, 100px);
   bottom: 20px;
   width: var(--assistant-width);
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  background: var(--bg);
+  gap: 10px;
+  border: 0;
+  background: transparent;
   z-index: 20;
-  overflow: hidden;
-  box-shadow: 0 0 0 1px rgb(4 23 43 / 0.02), 0 16px 40px -20px rgb(0 0 0 / 0.10);
+  overflow: visible;
 }
 .assistant-header {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  padding: 24px;
+  flex-shrink: 0;
+  height: 56px;
+  padding: 0 12px 0 22px;
   gap: 0 10px;
-  border-bottom: 1px solid var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--bg);
+  box-shadow: 0 8px 32px rgb(0 0 0 / 0.06);
+  transform-origin: top left;
+  overflow: hidden;
+}
+.assistant-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--bg);
+  overflow: hidden;
+  box-shadow: 0 16px 40px -20px rgb(0 0 0 / 0.16);
+  transform-origin: top center;
 }
 .assistant-name {
   display: flex;
@@ -766,25 +788,28 @@ a .icon {
   flex: 1;
 }
 .assistant-name > .icon {
-  color: var(--accent);
-  width: 25px;
-  height: 25px;
+  color: var(--turquoise);
+  width: 21px;
+  height: 21px;
 }
 .assistant-name h2 {
-  font-size: 26px;
-  letter-spacing: -0.4px;
+  font-size: 15px;
+  letter-spacing: -0.02em;
   margin: 0;
-  font-weight: 400;
-  font-family: var(--font-display);
+  font-weight: 500;
+  font-family: var(--font-ui);
 }
-.assistant-header p {
-  width: 100%;
-  margin: 6px 0 0;
+.assistant-tagline {
+  margin: 0;
+  padding: 18px 20px 0;
   color: var(--muted);
   font-size: 12px;
 }
 .assistant-header > .icon-button {
-  margin-right: -10px;
+  margin-right: 0;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: var(--radius-pill);
 }
 .chat-context {
   margin: 16px 20px 0;
@@ -1097,14 +1122,13 @@ a .icon {
   height: 13px;
 }
 .assistant-launcher {
-  position: fixed;
-  right: 26px;
-  bottom: 24px;
-  z-index: 15;
-  box-shadow: 0 4px 20px rgb(0 0 0 / 0.08);
+  white-space: nowrap;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
 }
-.has-assistant .assistant-launcher {
-  display: none;
+.assistant-launcher[aria-expanded="true"] {
+  color: var(--turquoise);
+  background: var(--accent-soft);
+  border-color: var(--turquoise);
 }
 .has-assistant .page-footer {
   margin-bottom: 0;
@@ -1121,7 +1145,99 @@ dialog {
   box-shadow: 0 25px 100px #00000014;
 }
 #settings-modal {
-  width: min(820px, calc(100% - 28px));
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: 0;
+  width: min(780px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+}
+body.settings-open {
+  overflow: hidden;
+}
+.settings-trigger {
+  border-radius: var(--radius-pill);
+}
+.settings-trigger[aria-expanded="true"] {
+  opacity: 0;
+}
+#settings-modal::backdrop {
+  background: transparent;
+  backdrop-filter: none;
+}
+.settings-shade {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: rgb(17 19 22 / 0.24);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.settings-island {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 12px 0 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--bg);
+  box-shadow: 0 8px 32px rgb(0 0 0 / 0.06);
+  transform-origin: top left;
+  overflow: hidden;
+}
+.settings-island-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.settings-island h2 {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.settings-emblem {
+  display: grid;
+  grid-template-columns: repeat(2, 7px);
+  gap: 2px;
+  transform: rotate(-12deg);
+}
+.settings-emblem i {
+  width: 7px;
+  height: 7px;
+  background: var(--turquoise);
+  border-radius: 50%;
+}
+.settings-close {
+  display: flex;
+  gap: 10px;
+  min-width: 44px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border-radius: var(--radius-pill);
+  color: var(--muted);
+}
+.settings-close:hover {
+  background: var(--panel);
+  color: var(--text);
+}
+.settings-escape {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+.settings-close .icon {
+  width: 18px;
+  height: 18px;
 }
 dialog::backdrop {
   background: #17191c40;
@@ -1171,7 +1287,14 @@ dialog::backdrop {
 .settings-inner {
   display: flex;
   flex-direction: column;
-  max-height: 90dvh;
+  height: min(440px, calc(100dvh - 98px));
+  margin-top: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: var(--bg);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 0.12);
+  transform-origin: top center;
 }
 .settings-shell {
   display: flex;
@@ -1179,39 +1302,62 @@ dialog::backdrop {
   min-height: 0;
 }
 .settings-nav {
-  width: 180px;
+  width: 202px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 24px 12px;
+  gap: 0;
+  padding: 18px 14px;
   border-right: 1px solid var(--border);
   overflow-y: auto;
 }
-.settings-nav h2 {
-  font-size: 20px;
-  margin: 0 10px 14px;
-  font-family: var(--font-display);
-  font-weight: 400;
-}
 .settings-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   text-align: left;
   border: 0;
+  border-bottom: 1px solid var(--border);
   background: none;
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 18px 8px;
+  border-radius: 0;
   font-size: 13px;
   color: var(--muted);
-  min-height: 40px;
+  min-height: 58px;
+  transition: color 150ms ease, background-color 150ms ease;
+}
+.settings-nav-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.settings-nav-label .icon {
+  width: 17px;
+  height: 17px;
+}
+.settings-nav-number {
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  opacity: 0.6;
 }
 .settings-nav-item:hover {
   background: var(--panel);
   color: var(--text);
 }
 .settings-nav-item.is-active {
-  background: var(--surface);
+  background: transparent;
   color: var(--text);
-  font-weight: 500;
+  font-weight: 600;
+}
+.settings-nav-item.is-active .settings-nav-label > .icon {
+  color: var(--turquoise);
+}
+.settings-nav-item.is-active .settings-nav-number {
+  color: var(--turquoise);
+  opacity: 1;
 }
 .settings-main {
   flex: 1;
@@ -1221,7 +1367,8 @@ dialog::backdrop {
 }
 .settings-body {
   overflow-y: auto;
-  padding: 24px 28px 28px;
+  overscroll-behavior: contain;
+  padding: 28px;
   flex: 1;
   min-height: 0;
 }
@@ -1229,8 +1376,179 @@ dialog::backdrop {
   padding: 0;
 }
 .settings-section h3 {
-  font-size: 15px;
-  margin: 0 0 12px;
+  font-family: var(--font-ui);
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  margin: 0 0 22px;
+}
+.settings-section[inert] {
+  opacity: 0.4;
+}
+.settings-section:focus-visible {
+  outline-offset: 5px;
+}
+.settings-load-notice {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+#settings-panel-scan .settings-row:first-of-type {
+  flex-direction: column;
+  align-items: flex-start;
+}
+#settings-panel-scan .segmented {
+  margin: 4px 0 0;
+}
+.scan-program-editor {
+  margin: 6px 0 20px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+.program-help,
+.program-empty {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+.program-timezone {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.program-section {
+  margin: 0 0 22px;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.program-section:last-of-type {
+  margin-bottom: 0;
+}
+.program-section legend {
+  margin-bottom: 12px;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.program-time-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.program-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-left: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.program-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  min-height: 36px;
+  padding: 0;
+  background: transparent;
+  color: var(--muted);
+  border: 0;
+  border-radius: var(--radius-pill);
+  font-size: 19px;
+  flex-shrink: 0;
+}
+.program-remove:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+.program-add-time {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.program-add-time .settings-field {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+.scan-program-editor .button {
+  padding: 9px 14px;
+  min-height: 40px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.program-window-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+@media (max-width: 450px) {
+  .program-window-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .program-window-fields .settings-field:last-child {
+    grid-column: 1 / -1;
+  }
+}
+.program-window-fields .settings-field,
+.program-add-time .settings-field {
+  font-size: 11px;
+}
+.scan-program-editor input,
+.scan-program-editor select {
+  min-width: 0;
+  padding: 8px;
+  font-size: 12px;
+  min-height: 40px;
+}
+.program-window {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.program-window-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.program-window-text strong {
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.program-window-text > span {
+  color: var(--muted);
+  font-size: 11px;
+}
+.program-section > .program-help {
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+.program-error {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--peach);
+  color: var(--sienna);
+  font-size: 12px;
+  line-height: 1.6;
 }
 .settings-row {
   display: flex;
@@ -1247,6 +1565,7 @@ dialog::backdrop {
 .settings-row-text {
   display: flex;
   flex-direction: column;
+  flex: 1;
   gap: 3px;
   min-width: 0;
 }
@@ -1425,14 +1744,17 @@ dialog::backdrop {
 }
 @media (min-width: 1600px) {
   .page {
-    padding: 35px 40px;
+    padding: 0 40px 35px;
+  }
+  .page-topbar {
+    padding-top: 35px;
   }
   .has-assistant .page {
     max-width: 1160px;
   }
   .assistant {
     right: 28px;
-    top: 28px;
+    top: var(--assistant-top, 100px);
     bottom: 28px;
   }
 }
@@ -1441,7 +1763,7 @@ dialog::backdrop {
     --assistant-width: 380px;
   }
   .has-assistant .page {
-    padding: 22px 20px;
+    padding: 0 20px 22px;
     margin-right: 400px;
   }
   .refresh span {
@@ -1481,25 +1803,36 @@ dialog::backdrop {
   .page,
   .has-assistant .page {
     margin: 0 auto;
-    padding: 20px;
+    padding: 0 20px 20px;
     max-width: 860px;
   }
   .assistant {
-    inset: 0;
-    width: 100%;
-    height: 100dvh;
+    inset: 12px;
+    width: calc(100% - 24px);
+    height: calc(100dvh - 24px);
     border: 0;
     border-radius: 0;
     z-index: 40;
+  }
+  .page-topbar {
+    max-width: 860px;
+    padding: 20px 20px 0;
+  }
+  .topbar-actions .assistant-launcher {
+    width: 44px;
+    padding: 9px;
+  }
+  .topbar-actions .assistant-launcher span {
+    display: none;
   }
   .chat-open {
     overflow: hidden;
   }
   .assistant-header {
-    padding-top: max(10px, env(safe-area-inset-top));
-    padding-bottom: 10px;
+    padding-top: 0;
+    padding-bottom: 0;
   }
-  .assistant-header p {
+  .assistant-tagline {
     font-size: 12px;
   }
   .chat-context {
@@ -1521,9 +1854,6 @@ dialog::backdrop {
   .chat-welcome p {
     max-width: 400px;
   }
-  .has-assistant .status-line .open-assistant {
-    visibility: visible;
-  }
   .suggestions button {
     min-height: 44px;
     font-size: 12px;
@@ -1534,13 +1864,8 @@ dialog::backdrop {
   .composer-help {
     font-size: 11px;
   }
-  .assistant-launcher {
-    right: 18px;
-    bottom: max(18px, env(safe-area-inset-bottom));
-    min-height: 48px;
-  }
   .page-footer {
-    margin-bottom: 75px;
+    margin-bottom: 0;
   }
   .chat-context h3 {
     font-size: 14px;
@@ -1560,7 +1885,7 @@ dialog::backdrop {
 }
 @media (min-width: 901px) {
   .page {
-    padding-top: 28px;
+    padding-top: 0;
   }
   .status-line {
     margin: 16px 0 28px;
@@ -1582,7 +1907,10 @@ dialog::backdrop {
 @media (max-width: 600px) {
   .page,
   .has-assistant .page {
-    padding: 18px 16px 26px;
+    padding: 0 16px 26px;
+  }
+  .page-topbar {
+    padding: 18px 16px 0;
   }
   .topbar {
     gap: 10px;
@@ -1611,15 +1939,50 @@ dialog::backdrop {
   }
   .settings-nav {
     width: auto;
-    flex-flow: row wrap;
+    flex-direction: row;
     border-right: 0;
     border-bottom: 1px solid var(--border);
-    padding: 16px 16px 10px;
+    padding: 8px 12px 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    flex-shrink: 0;
   }
-  .settings-nav h2 {
-    flex-basis: 100%;
-    font-size: 18px;
-    margin-bottom: 10px;
+  .settings-nav-item {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+    padding: 12px 6px;
+    min-height: 48px;
+    font-size: 11px;
+    border-bottom: 2px solid transparent;
+  }
+  .settings-nav-item.is-active {
+    border-bottom-color: var(--turquoise);
+  }
+  .settings-nav-label {
+    white-space: nowrap;
+  }
+  .settings-nav-number,
+  .settings-nav-label .icon {
+    display: none;
+  }
+  .settings-main {
+    min-height: 0;
+  }
+  .settings-body {
+    padding: 22px 18px;
+  }
+  .settings-footer {
+    flex-wrap: wrap;
+    padding: 12px 18px;
+    font-size: 11px;
+  }
+  .settings-footer-actions {
+    margin-left: auto;
+  }
+  .settings-row {
+    flex-wrap: wrap;
   }
   .status-line .text-button {
     font-size: 10px;
@@ -1740,7 +2103,7 @@ dialog::backdrop {
     padding-right: 16px;
   }
   .assistant-name h2 {
-    font-size: 24px;
+    font-size: 15px;
   }
   .chat-context {
     margin: 10px 16px 0;
@@ -1809,8 +2172,8 @@ dialog::backdrop {
 
 @media (max-width: 900px) {
   .assistant {
-    top: var(--chat-top, 0px);
-    height: var(--chat-height, 100dvh);
+    top: calc(var(--chat-top, 0px) + 12px);
+    height: calc(var(--chat-height, 100dvh) - 24px);
     bottom: auto;
   }
 }
@@ -1914,7 +2277,17 @@ dialog::backdrop {
 }
 
 @media (max-width: 600px) {
-  .brand strong { font-size: 36px; }
+  .brand strong { font-size: 28px; }
   .brand > span { font-size: 8px; }
   .page-footer { gap: 20px; flex-wrap: wrap; }
+}
+@media (max-width: 380px) {
+  .page-topbar { gap: 6px; }
+  .page-topbar .topbar-actions { gap: 2px; }
+  .page-topbar .brand strong { font-size: 22px; }
+  .page-topbar .brand > span { display: none; }
+}
+@media (max-width: 340px) {
+  .page-topbar .brand strong { font-size: 18px; }
+  .page-topbar .topbar-actions { gap: 1px; }
 }

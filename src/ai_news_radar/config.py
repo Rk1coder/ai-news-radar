@@ -20,7 +20,7 @@ SCAN_HOURS = tuple(sorted({int(h.strip()) for h in os.environ.get("SCAN_HOURS", 
 if not SCAN_HOURS or any(h < 0 or h > 23 for h in SCAN_HOURS):
     raise ValueError("SCAN_HOURS must contain hours between 0 and 23")
 
-# Set to 0 to use the legacy daily SCAN_HOURS schedule.
+# Set to 0 to use the daily program; SCAN_HOURS supplies its initial times.
 SCAN_INTERVAL_MINUTES = int(os.environ.get("SCAN_INTERVAL_MINUTES", "15"))
 if SCAN_INTERVAL_MINUTES not in (0, 5, 10, 15, 20, 30, 60):
     raise ValueError("SCAN_INTERVAL_MINUTES must be 0, 5, 10, 15, 20, 30 or 60")

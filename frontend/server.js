@@ -8,6 +8,9 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.json({ limit: "128kb" }));
 app.use(express.static(path.join(__dirname, "public")));
+app.get("/vendor/gsap.min.js", (req, res) => {
+  res.sendFile(require.resolve("gsap/dist/gsap.min.js"));
+});
 
 const icons = new Map();
 function icon(name) {
@@ -77,6 +80,17 @@ const sourceLabels = {
   "dogus-teknoloji-blog": "Doğuş Teknoloji",
   "atalay-tech": "Atalay Tech",
   "reddit-localllama": "Reddit · r/LocalLLaMA",
+  "reddit-ai-communities": "Reddit · AI ve yerel modeller",
+  "yt-two-minute-papers": "YouTube · Two Minute Papers",
+  "yt-yannic-kilcher": "YouTube · Yannic Kilcher",
+  "yt-ai-explained": "YouTube · AI Explained",
+  "yt-lex-fridman": "YouTube · Lex Fridman",
+  "yt-matt-wolfe": "YouTube · Matt Wolfe",
+  "yt-ai-jason": "YouTube · AI Jason",
+  "yt-vllm-office-hours": "YouTube · vLLM Office Hours",
+  "yt-matt-williams": "YouTube · Matt Williams",
+  "yt-matthew-berman": "YouTube · Matthew Berman",
+  "yt-sam-witteveen": "YouTube · Sam Witteveen",
   "ollama-blog": "Ollama Blog",
   "lm-studio-blog": "LM Studio",
   "civitai-education": "Civitai Education",
@@ -139,7 +153,7 @@ function scanLabels(state = {}) {
     ? "Otomatik tarama kapalı"
     : !state.scheduler_online
       ? "Otomatik tarama bağlantısı bekleniyor"
-      : `${state.interval_minutes ? `${state.interval_minutes} dakikada bir tarama` : `Günde ${(state.hours || []).length} tarama`}${time ? ` · Sıradaki ${time} (TR)` : ""}`;
+      : `${state.interval_minutes ? `${state.interval_minutes} dakikada bir tarama` : "Özel tarama programı"}${time ? ` · Sıradaki ${time} (TR)` : ""}`;
   return { status, schedule, running: scan?.status === "running", outcome: scan?.status || "", newCount: scan?.new_count || 0 };
 }
 function buildQs(current) {
@@ -301,7 +315,10 @@ app.put(
       body: JSON.stringify(req.body),
       signal: AbortSignal.timeout(15000),
     });
-    if (!response.ok) return res.status(response.status).json({ error: "Ayar kaydedilemedi." });
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      return res.status(response.status).json({ error: response.status < 500 && typeof body.detail === "string" ? body.detail : "Ayar kaydedilemedi." });
+    }
     res.json(await response.json());
   }),
 );

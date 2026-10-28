@@ -2,11 +2,13 @@
 from fastapi import HTTPException
 
 from ai_news_radar.ingestion import default_connectors
-from ai_news_radar.models import AppSettings, CustomSource, SourceToggle
+from ai_news_radar.models import AppSettings, CustomSource, ScanProgram, SourceToggle
+from ai_news_radar.scan_program import normalize_program
 from ai_news_radar.scans import effective_settings
 
 SCAN_INTERVAL_CHOICES = (0, 5, 10, 15, 20, 30, 60)
 SOURCE_TYPES = ("academic", "company", "media", "defense", "social")
+_UNSET = object()
 
 
 def get_settings(session) -> dict:
@@ -23,15 +25,25 @@ def get_settings(session) -> dict:
     return {"scan": effective_settings(session), "sources": builtin + custom}
 
 
-def update_scan_settings(session, *, interval_minutes=None, auto_scan_enabled=None) -> None:
+def update_scan_settings(session, *, interval_minutes=None, auto_scan_enabled=None, program=_UNSET) -> None:
     if interval_minutes is not None and interval_minutes not in SCAN_INTERVAL_CHOICES:
         raise HTTPException(status_code=400, detail="Gecersiz tarama araligi")
+    current = effective_settings(session)
+    try:
+        selected_program = current["program"] if program is _UNSET else normalize_program(program)
+        selected_interval = current["interval_minutes"] if interval_minutes is None else interval_minutes
+        if selected_interval == 0 and not (selected_program["times"] or selected_program["windows"]):
+            raise ValueError("En az bir tarama saati veya zaman aralığı ekle.")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     row = session.get(AppSettings, 1) or AppSettings(id=1)
     if interval_minutes is not None:
         row.scan_interval_minutes = interval_minutes
     if auto_scan_enabled is not None:
         row.auto_scan_enabled = auto_scan_enabled
     session.merge(row)
+    if program is not _UNSET:
+        session.merge(ScanProgram(id=1, program=selected_program))
 
 
 def set_source_enabled(session, source_name: str, enabled: bool) -> None:

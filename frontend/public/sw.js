@@ -1,12 +1,16 @@
 // shortcut: cache-first for a fixed static asset list; no versioned cache busting beyond CACHE_NAME —
 // bump CACHE_NAME when any cached file's content changes meaningfully.
-const CACHE_NAME = "radar-static-v2";
+const CACHE_NAME = "radar-static-v6";
 const ASSETS = [
   "/styles.css",
   "/app.js",
   "/chat-state.js",
   "/live-feed.js",
   "/settings.js",
+  "/settings-motion.js",
+  "/scan-program.js",
+  "/assistant-motion.js",
+  "/vendor/gsap.min.js",
   "/manifest.webmanifest",
   "/radar.svg",
   "/radar-favicon.svg",

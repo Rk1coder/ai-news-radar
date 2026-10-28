@@ -150,6 +150,15 @@ class AppSettings(Base):
     auto_scan_enabled: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
 
 
+class ScanProgram(Base):
+    """Singleton daily rules; separate table preserves existing app_settings installations."""
+
+    __tablename__ = "scan_programs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    program: Mapped[dict] = mapped_column(JSON)
+
+
 class SourceToggle(Base):
     """Varsayilan bir connector'in kapatilmis oldugunu kaydeder - sadece KAPALI olanlar icin satir var."""
 

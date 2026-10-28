@@ -214,7 +214,12 @@ Her taramada kontrol edilen ek kaynaklar:
 - n8n Blog, Make Blog, Zapier Blog, The Rundown AI
 - Medium: `artificial-intelligence`, `automation`, `yapay-zeka`, `otomasyon` etiketleri
 - Doğuş Teknoloji'nin kurumsal blogu ve Medium yayını, Atalay Tech'in resmi blogu
-- Reddit r/LocalLLaMA, Ollama Blog, LM Studio Blog
+- Reddit: r/LocalLLaMA, r/LocalLLM, r/Vllm, r/artificial, r/MachineLearning, r/singularity,
+  r/OpenAI, r/StableDiffusion ve r/ChatGPT tek birleşik RSS isteğiyle taranır.
+- YouTube: Two Minute Papers, Yannic Kilcher, AI Explained, Lex Fridman, Matt Wolfe,
+  AI Jason, Matt Williams, Matthew Berman, Sam Witteveen ve [vLLM Office Hours](https://vllm.ai/office-hours).
+  Kanal/video listelerinin herkese açık Atom akışları okunur; video transkripti indirilmez.
+- Ollama Blog, LM Studio Blog
 - Civitai Education, Stable Diffusion Art, OpenZeka, Masqot
 - Hugging Face Blog ve Ben’s Bites mevcut kaynaklarıyla korunur; ikinci kez eklenmez.
 

@@ -244,8 +244,9 @@ def test_settings_scan_update_round_trips():
         assert before["scan"]["interval_minutes"] == 15
         updated = client.put("/api/settings/scan", json={"interval_minutes": 30, "auto_scan_enabled": False})
         assert updated.status_code == 200
-        assert updated.json()["scan"] == {"interval_minutes": 30, "auto_scan_enabled": False}
-        assert client.get("/api/settings").json()["scan"] == {"interval_minutes": 30, "auto_scan_enabled": False}
+        want = {**before["scan"], "interval_minutes": 30, "auto_scan_enabled": False}
+        assert updated.json()["scan"] == want
+        assert client.get("/api/settings").json()["scan"] == want
         assert client.put("/api/settings/scan", json={"interval_minutes": 7}).status_code == 400
 
 

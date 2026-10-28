@@ -155,3 +155,110 @@ test("manual scan stays on the page, preserves a draft, and reports completion a
   assert.match(w.document.getElementById('refresh-message').textContent, /doğrulanamadı/);
   assert.equal(w.document.querySelectorAll('.story').length, 2);
 });
+
+function assistantSetup(t, { mobile = true, reduced = false, gsap = true } = {}) {
+  const dom = new JSDOM(html([1, 2]), { url: "http://localhost:3001/", runScripts: "outside-only", pretendToBeVisual: true });
+  const w = dom.window;
+  w.matchMedia = (query) => ({ matches: query.includes("reduced-motion") ? reduced : mobile, addEventListener() {} });
+  w.IntersectionObserver = class { observe() {} unobserve() {} };
+  w.setInterval = () => 1;
+  w.fetch = async () => ({ ok: true, json: async () => ({ image: null }), text: async () => html([1, 2]) });
+  if (gsap) {
+    w.eval(fs.readFileSync(require.resolve("gsap/dist/gsap.min.js"), "utf8"));
+    w.gsap.globalTimeline.timeScale(100);
+  }
+  for (const file of ["chat-state.js", "live-feed.js", "assistant-motion.js", "app.js"]) {
+    const full = path.join(root, "public", file);
+    if (fs.existsSync(full)) w.eval(fs.readFileSync(full, "utf8"));
+  }
+  t.after(() => { w.gsap?.ticker.sleep(); w.close(); });
+  const d = w.document;
+  return { w, d, panel: d.getElementById("assistant"), trigger: d.getElementById("assistant-launcher") };
+}
+const motionSettled = () => new Promise((resolve) => setTimeout(resolve, 80));
+
+test("assistant retains modal semantics until the exit finishes, then restores focus", async (t) => {
+  const { d, panel, trigger } = assistantSetup(t);
+  trigger.click();
+  await motionSettled();
+  d.getElementById("close-chat").click();
+  assert.equal(panel.hidden, false, "closing must finish its animation before hiding the panel");
+  assert.equal(d.getElementById("page-content").inert, true);
+  await motionSettled();
+  assert.equal(panel.hidden, true);
+  assert.equal(d.body.classList.contains("chat-open"), false);
+  assert.equal(d.getElementById("page-content").inert, false);
+  assert.equal(d.activeElement, trigger);
+});
+
+test("reopening the assistant during exit cancels dismissal and preserves the draft", async (t) => {
+  const { w, d, panel, trigger } = assistantSetup(t);
+  trigger.click();
+  await motionSettled();
+  const input = d.getElementById("chat-input");
+  input.value = "Kaybolmayan taslak";
+  input.dispatchEvent(new w.Event("input"));
+  d.getElementById("close-chat").click();
+  trigger.click();
+  await motionSettled();
+  assert.equal(panel.hidden, false);
+  assert.equal(input.value, "Kaybolmayan taslak");
+  assert.equal(d.body.classList.contains("chat-open"), true);
+  assert.equal(trigger.getAttribute("aria-expanded"), "true");
+});
+
+test("Escape during entrance closes smoothly and keeps each story's draft", async (t) => {
+  const { w, d, panel } = assistantSetup(t);
+  const first = d.querySelector('[data-id="1"] [data-action="chat"]');
+  first.click();
+  const input = d.getElementById("chat-input");
+  input.value = "İlk haberin sorusu";
+  input.dispatchEvent(new w.Event("input"));
+  panel.dispatchEvent(new w.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  assert.equal(panel.hidden, false);
+  await motionSettled();
+  assert.equal(d.activeElement, first);
+  d.querySelector('[data-id="2"] [data-action="chat"]').click();
+  assert.equal(input.value, "");
+  first.click();
+  assert.equal(input.value, "İlk haberin sorusu");
+  assert.equal(d.getElementById("chat-title").textContent, "Haber 1");
+});
+
+test("assistant reduced-motion and missing GSAP paths close immediately", async (t) => {
+  for (const options of [{ reduced: true }, { gsap: false }]) {
+    const { d, panel, trigger } = assistantSetup(t, options);
+    trigger.click();
+    assert.equal(trigger.getAttribute("aria-expanded"), "true");
+    d.getElementById("close-chat").click();
+    assert.equal(panel.hidden, true);
+    assert.equal(trigger.getAttribute("aria-expanded"), "false");
+  }
+});
+
+test("the single global assistant control lives in the header and toggles chat", async (t) => {
+  const { d, trigger, panel } = assistantSetup(t, { reduced: true });
+  assert.ok(d.querySelector('.topbar-actions').contains(trigger));
+  assert.equal(d.querySelectorAll('.open-assistant').length, 1);
+  trigger.click();
+  assert.equal(panel.hidden, false);
+  assert.equal(d.getElementById('page-header').inert, true);
+  trigger.click();
+  assert.equal(panel.hidden, true);
+  assert.equal(d.getElementById('page-header').inert, false);
+  assert.equal(d.activeElement, trigger);
+});
+
+test("story actions animate from the shared top-right control rather than the card", async (t) => {
+  const { w, d, trigger, panel } = assistantSetup(t);
+  trigger.getBoundingClientRect = () => ({left:900,top:36,right:1020,bottom:80,width:120,height:44});
+  panel.getBoundingClientRect = () => ({left:640,top:100,right:1020,bottom:700,width:380,height:600});
+  const header = panel.querySelector('.assistant-header');
+  header.getBoundingClientRect = () => ({left:640,top:100,right:1020,bottom:156,width:380,height:56});
+  const cardButton = d.querySelector('[data-id="1"] [data-action="chat"]');
+  cardButton.getBoundingClientRect = () => ({left:100,top:400,right:200,bottom:444,width:100,height:44});
+  cardButton.click();
+  assert.equal(w.gsap.getProperty(header, 'x'), 260);
+  assert.equal(w.gsap.getProperty(header, 'y'), -64);
+  assert.equal(d.getElementById('chat-title').textContent, 'Haber 1');
+});

@@ -118,7 +118,8 @@ def test_scan_status_reflects_db_backed_scan_interval(tmp_path):
         session.add(AppSettings(id=1, scan_interval_minutes=30, auto_scan_enabled=True))
         session.commit()
         settings = effective_settings(session)
-        assert settings == {"interval_minutes": 30, "auto_scan_enabled": True}
+        assert settings["interval_minutes"] == 30
+        assert settings["auto_scan_enabled"] is True
         assert scan_status(session)["interval_minutes"] == 30
 
 

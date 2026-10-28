@@ -70,14 +70,17 @@ def story_html(story, index, timezone):
     heading = f'<a href="{escape(url, quote=True)}" style="color:#17191c;text-decoration:none;">{title}</a>' if url else title
     importance = f'<p style="margin:14px 0 0;padding-left:12px;border-left:2px solid #18a5a1;font-size:14px;line-height:1.65;color:#4d555b;"><strong style="color:#17191c;">Neden önemli?</strong><br>{rationale}</p>' if rationale else ''
     marker = 'ÖNE ÇIKAN GELİŞME' if index == 1 else 'GÜNÜN AKIŞI'
-    return f'''<tr><td class="content" style="padding:26px 32px;border-top:1px solid #e2e7e7;">
-      <p style="margin:0 0 12px;color:#087e7c;font-size:11px;font-weight:bold;letter-spacing:1px;">{index:02d} / {marker}</p>
-      <h2 style="margin:0 0 10px;font-size:{24 if index == 1 else 20}px;line-height:1.3;letter-spacing:-.3px;font-weight:700;">{heading}</h2>
-      <p style="margin:0 0 14px;color:#697279;font-size:12px;line-height:1.6;">{escape(source_name(story))} &nbsp;·&nbsp; {escape(stamp(story, timezone))}</p>
-      <p style="margin:0;color:#30383e;font-size:15px;line-height:1.8;">{text or 'Yayıncı bu haber için kısa bir özet paylaşmadı. Ayrıntılar için orijinal kaynağı açabilirsin.'}</p>
-      {importance}
-      <p style="margin:16px 0 10px;color:#697279;font-size:11px;line-height:1.6;">{escape(tags)}</p>{link}{related_html(story)}
-    </td></tr>'''
+    heading_size, heading_weight = (27, 700) if index == 1 else (18, 600)
+    parts = [
+        f'<p style="margin:0 0 12px;color:#087e7c;font-size:11px;font-weight:bold;letter-spacing:1px;">{index:02d} / {marker}</p>',
+        f'<h2 style="margin:0 0 10px;font-size:{heading_size}px;line-height:1.3;letter-spacing:-.3px;font-weight:{heading_weight};">{heading}</h2>',
+        f'<p style="margin:0 0 14px;color:#697279;font-size:12px;line-height:1.6;">{escape(source_name(story))} &nbsp;·&nbsp; {escape(stamp(story, timezone))}</p>',
+        f'<p style="margin:0;color:#30383e;font-size:15px;line-height:1.8;">{text or "Yayıncı bu haber için kısa bir özet paylaşmadı. Ayrıntılar için orijinal kaynağı açabilirsin."}</p>',
+        importance,
+        f'<p style="margin:16px 0 10px;color:#697279;font-size:11px;line-height:1.6;">{escape(tags)}</p>{link}{related_html(story)}',
+    ]
+    body = '\n      '.join(part for part in parts if part)
+    return f'<tr><td class="content" style="padding:26px 32px;border-top:1px solid #e2e7e7;">\n      {body}\n    </td></tr>'
 
 
 def render_html(stories, date_label, *, timezone="Europe/Istanbul", public_url=""):
@@ -94,17 +97,13 @@ def render_html(stories, date_label, *, timezone="Europe/Istanbul", public_url="
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;">{escape(date_label)} · {count} seçili AI haberi. Dil modelleri, araştırmalar ve uygulamalar; kaynaklarıyla günlük Radar özeti.</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="outer" align="center" style="padding:32px 16px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:620px;background:#ffffff;border:1px solid #dce3e3;">
-<tr><td class="content" style="background:#0c0c0c;padding:8px 28px;border-bottom:4px solid #18a5a1;">
+<tr><td class="content" style="background:#0f2b26;padding:8px 28px;border-bottom:4px solid #18a5a1;">
 <img class="brand" src="cid:radar-logo" width="260" height="145" alt="Radar — AI News Detect &amp; Blog" style="display:block;width:260px;height:145px;max-width:100%;border:0;"></td></tr>
 <tr><td class="content" style="padding:30px 32px 26px;">
 <p style="margin:0 0 12px;font-size:11px;letter-spacing:1.2px;color:#087e7c;font-weight:bold;">GÜNLÜK BÜLTEN &nbsp;/&nbsp; {escape(date_label)}</p>
 <h1 style="margin:0 0 14px;font-size:32px;line-height:1.2;letter-spacing:-.8px;">Günün AI gündemi.</h1>
 <p style="margin:0 0 24px;color:#4d555b;font-size:15px;line-height:1.8;">Araştırmalar, dil modelleri ve pratik uygulamalar. Son 24 saatin seçili gelişmeleri; ne olduğu, neden önemli olduğu ve orijinal kaynaklarıyla.</p>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e2e7e7;border-bottom:1px solid #e2e7e7;"><tr>
-<td width="33%" style="padding:16px 0;"><strong style="font-size:24px;">{count:02d}</strong><br><span style="font-size:11px;color:#697279;">seçili haber</span></td>
-<td width="33%" style="padding:16px 12px;border-left:1px solid #e2e7e7;"><strong style="font-size:24px;">{sources:02d}</strong><br><span style="font-size:11px;color:#697279;">kaynak</span></td>
-<td width="34%" style="padding:16px 12px;border-left:1px solid #e2e7e7;"><strong style="font-size:24px;">24</strong><br><span style="font-size:11px;color:#697279;">saatlik bakış</span></td>
-</tr></table></td></tr>{body}
+<p style="margin:0 0 24px;color:#697279;font-size:12px;line-height:1.6;">{count:02d} seçili haber &nbsp;·&nbsp; {sources:02d} kaynak &nbsp;·&nbsp; son 24 saat</p></td></tr>{body}
 <tr><td class="content" style="padding:26px 32px;background:#f6f8f8;border-top:1px solid #e2e7e7;">{cta}
 <p style="margin:0 0 10px;font-size:13px;font-weight:bold;">Kaynağı incele. Bağlamı anla.</p>
 <p style="margin:0;color:#697279;font-size:11px;line-height:1.8;">Bu bülten Radar’ın kaynak politikasına göre seçilir; bağımsız çapraz teyit anlamına gelmez. Teyit bekleyen sosyal paylaşımlar dahil edilmez. Yayın tarihi olmayan içeriklerde Radara alınma zamanı gösterilir.<br>Saat dilimi: {escape(timezone)} · Radar günlük AI özeti</p>

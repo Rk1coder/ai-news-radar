@@ -160,23 +160,7 @@ Bu özellik mevcut kayıtlar üzerinde çalışan bir konu sözlüğü ve metin 
 
 Yeni kabul edilmiş haberler kısa Türkçe başlık, en fazla iki cümle/320 karakter özet, kaynak/yayın tarihi ve orijinal bağlantıyla gönderilir. Çeviri yoksa kaynak metni kullanılır. Büyük bağlantı önizlemeleri kapalıdır; mesajlar sessiz gönderilir. Puan tablosu gönderilmez.
 
-1. Telegram'da [@BotFather](https://t.me/BotFather) ile bot oluşturun.
-2. Botu hedef kanala ekleyip mesaj yayınlama yetkisi verin; grup için botun mesaj gönderme izni olmalı.
-3. Tokenı `.env` içindeki `TELEGRAM_BOT_TOKEN` alanına, kanalın `@kullaniciadi` veya grubun sayısal kimliğini `TELEGRAM_CHAT_ID` alanına yazın. Özel kanal/gruplarda davet bağlantısı yerine sayısal chat ID gerekir. Tokenı sohbetlere, ekran görüntülerine veya Git'e koymayın.
-4. Hedefi doğruladıktan sonra `.env` dosyasında `TELEGRAM_ENABLED=true` yapın ve `docker compose up -d api scheduler` çalıştırın. Varsayılan kapalıdır; token ve hedef de dolu olmalı.
-
-```dotenv
-TELEGRAM_ENABLED=false
-TELEGRAM_BOT_TOKEN=
-TELEGRAM_CHAT_ID=
-```
-
-Yerel önizleme ve durum (bu komutlar **mesaj göndermez**):
-
-```bash
-docker compose exec -T api python -m ai_news_radar.notifications.telegram --preview
-docker compose exec -T api python -m ai_news_radar.notifications.telegram
-```
+📣 Haberleri telefonundan takip etmek için Telegram kanalımıza katılabilirsin: **[t.me/+PLz5p6UnqV03NmFk](https://t.me/+PLz5p6UnqV03NmFk)**
 
 Etkinleştirmeden önceki arşiv otomatik gönderilmez. API, scheduler veya CLI'nin işlediği **yeni**, kaynak politikasıyla kabul edilmiş haberler kaynak kaydıyla aynı transaction'da `telegram_deliveries` tablosuna yazılır. Tarama veya uygulama yeniden başlatıldığında `sent` kayıtlar tekrar gönderilmez. Hedef değişince eski hedefin kuyruğu yeni hedefe aktarılmaz. Etkinleştirmeden sonra ilk yeni haber bir sonraki taramada kuyruğa girer; her scheduler döngüsünde en fazla bir mesaj gönderilir (normalde 30 saniyede bir). Tarama sürerken gönderim bekler. Haber taraması kapatılsa bile (`AUTO_SCAN_ENABLED=false`) scheduler servisi açıksa mevcut Telegram kuyruğu işlenir.
 

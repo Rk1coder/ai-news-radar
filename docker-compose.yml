@@ -1,26 +1,9 @@
 services:
-  postgres:
-    image: postgres:16
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: radar
-      POSTGRES_PASSWORD: radar
-      POSTGRES_DB: ai_news_radar
-    ports:
-      - "5432:5432"
-    volumes:
-      - radar_pg_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U radar -d ai_news_radar"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
   api:
     build: .
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql+psycopg2://radar:radar@postgres.:5432/ai_news_radar
+      DATABASE_URL: ${DATABASE_URL}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       CLASSIFIER_MODEL: ${CLASSIFIER_MODEL:-claude-haiku-4-5}
       TELEGRAM_ENABLED: ${TELEGRAM_ENABLED:-false}
@@ -37,16 +20,13 @@ services:
       interval: 10s
       timeout: 6s
       retries: 12
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   scheduler:
     build: .
     command: ["python", "-m", "ai_news_radar.scheduler"]
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql+psycopg2://radar:radar@postgres.:5432/ai_news_radar
+      DATABASE_URL: ${DATABASE_URL}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       CLASSIFIER_MODEL: ${CLASSIFIER_MODEL:-claude-haiku-4-5}
       TELEGRAM_ENABLED: ${TELEGRAM_ENABLED:-false}
@@ -57,8 +37,6 @@ services:
       SCAN_HOURS: ${SCAN_HOURS:-6,10,14,18,22}
       SCAN_INTERVAL_MINUTES: ${SCAN_INTERVAL_MINUTES:-15}
     depends_on:
-      postgres:
-        condition: service_healthy
       api:
         condition: service_healthy
 
@@ -72,6 +50,3 @@ services:
       - "3000:3000"
     depends_on:
       - api
-
-volumes:
-  radar_pg_data:

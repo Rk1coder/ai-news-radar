@@ -33,17 +33,23 @@ ve Node/Express/EJS arayüzünden oluşur.
 
 ## Kurulum (Docker)
 
+Veritabanı artık Docker'ın içinde değil, **uzak/yönetilen bir Postgres**'tir (örn.
+[Neon](https://neon.tech), Supabase, Railway veya kendi sunucunuz) — böylece
+uygulamayı hangi bilgisayarda ayağa kaldırırsanız kaldırın, aynı haber geçmişine
+bağlanırsınız; veri tek bir makinenin diskine bağlı kalmaz.
+
 ```bash
-cp .env.example .env   # ANTHROPIC_API_KEY değerini doldur
+cp .env.example .env
+# DATABASE_URL'i kendi Postgres bağlantı string'inizle doldurun (bkz. .env.example
+# içindeki not). ANTHROPIC_API_KEY değerini de doldurun.
 # Mevcut .env dosyanız varsa üzerine yazmayın.
 docker compose up -d --build
 ```
 
 Arayüz: http://localhost:3000 · API: http://localhost:8008
 
-Servisler: `postgres` (veritabanı), `api` (FastAPI), `scheduler` (otomatik tarama),
-`frontend` (Node/Express arayüz). Hepsi `docker-compose.yml` içinde tanımlı,
-tek komutla ayağa kalkar.
+Servisler: `api` (FastAPI), `scheduler` (otomatik tarama), `frontend` (Node/Express
+arayüz). Hepsi `docker-compose.yml` içinde tanımlı, tek komutla ayağa kalkar.
 
 Değişiklik sonrası yeniden derleme gerekir (imajlar volume mount kullanmaz):
 
@@ -56,18 +62,18 @@ docker compose up -d --build api    # sadece api (kod değişikliğinden sonra)
 
 İmajlar bir kez derlendikten (`docker compose build`, internet gerektirir — Python/
 Node bağımlılıkları ve temel imajlar bu adımda indirilir) sonra `docker compose up`
-ile **tekrar internete ihtiyaç duymadan** ayağa kaldırılabilir: imajlar yerel Docker
-önbelleğinden çalışır, veritabanı kalıcı bir volume'da tutulur. Arayüz artık
-Google Fonts gibi bir CDN'e de bağımlı değil — tüm fontlar (`frontend/public/fonts/`)
-imajın içinde yerel olarak paketlenir.
+imajları yerel Docker önbelleğinden çalıştırır; Google Fonts gibi bir CDN'e de
+bağımlılık yoktur — tüm fontlar (`frontend/public/fonts/`) imajın içinde yerel
+olarak paketlenir.
 
-Bununla birlikte **uygulamanın kendi işlevi internet gerektirir**: yeni haber taraması
-(RSS/Atom kaynakları), LLM sınıflandırma/çeviri ve sohbet (Anthropic API) ve Telegram
-bildirimleri için dış ağ erişimi şarttır. İnternetsiz bir ortamda arayüz açılır ve
-**daha önce taranmış kayıtlar** görüntülenebilir, ancak yeni tarama/sınıflandırma/
-sohbet yanıtı alınamaz. Bunu tamamen offline bir "demo" olarak çalıştırmak isterseniz
-önceden doldurulmuş bir veritabanı imajı (`pg_dump`/`pg_restore`) ile birlikte
-dağıtmanız gerekir.
+Ancak veritabanı artık **uzak** olduğu için (yukarıya bakın), arayüzün **herhangi bir
+kaydı görüntülemesi dahi internet gerektirir** — eski/yeni fark etmez. Buna ek olarak
+yeni haber taraması (RSS/Atom kaynakları), LLM sınıflandırma/çeviri ve sohbet
+(Anthropic API) ve Telegram bildirimleri için de dış ağ erişimi şarttır. Yani bu
+kurulumla internetsiz bir ortamda uygulama **hiç açılmaz**. Tamamen offline
+çalışması gereken bir demo için `DATABASE_URL`'i yerel bir Postgres'e (veya
+`docker-compose.yml`'e eklenecek bir `postgres` servisine) yönlendirip veriyi
+`pg_dump`/`pg_restore` ile o yerel veritabanına taşımanız gerekir.
 
 ## Otomatik haber akışı
 

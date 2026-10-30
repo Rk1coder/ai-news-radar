@@ -1,4 +1,5 @@
 import json
+import logging
 from dataclasses import dataclass
 
 from anthropic import Anthropic
@@ -65,6 +66,24 @@ SADECE gecerli JSON dondur, baska hicbir metin ekleme. rationale alanini KISA tu
 """
 
 
+TURKISH_EDITORIAL_STYLE = """
+Türkçe başlık, özet ve varsa rationale alanlarında edilgen ve nesnel haber dili
+kullanılmalıdır. Örnek: "Şirket yeni modeli tanıttı" yerine "Yeni model şirket
+tarafından tanıtıldı". Kaynaktaki zaman, belirsizlik, iddianın sahibi, sayılar ve
+sürüm numaraları korunmalıdır; hedefler gerçekleşmiş sonuç gibi yazılmamalıdır.
+Başlıklarda cümle düzeni kullanılmalı; her sözcüğün ilk harfi büyütülmemelidir.
+Özel adlar ve teknik kısaltmalar korunmalıdır. Türkçe karakterler (ç, ğ, ı, İ, ö,
+ş, ü) eksiksiz kullanılmalı; ASCII harflere indirgenmemelidir. "Yapay zekâ",
+"yayımlandı", "iş birliği" ve "hâlihazırda" gibi sözcüklerin yazımı kontrol
+edilmelidir. "Use case", "solid", "hype" gibi gereksiz yabancı ifadeler yerine
+doğal Türkçe karşılıklar kullanılmalıdır. Metin zaten Türkçeyse aynı kurallarla
+düzenlenmelidir. Kaynakta bulunmayan bilgiler çeviriye eklenmemelidir.
+Yanıt verilmeden önce yazım, noktalama, Türkçe karakterler ve edilgen anlatım
+kontrol edilmelidir. Rationale en fazla iki Türkçe cümleyle sınırlandırılmalıdır.
+"""
+SYSTEM_PROMPT += TURKISH_EDITORIAL_STYLE
+
+
 @dataclass
 class ClassificationResult:
     technical_impact_score: int
@@ -88,17 +107,26 @@ class ClassificationResult:
 
 
 def _call_llm_json(system_prompt: str, title: str, summary: str, max_tokens: int) -> dict:
-    """Calls the model with (title, summary) and parses its JSON reply, stripping any ```json fence."""
+    """Retry malformed/truncated JSON once; never accept an incomplete result."""
     client = Anthropic(api_key=ANTHROPIC_API_KEY)
-    message = client.messages.create(
-        model=CLASSIFIER_MODEL,
-        max_tokens=max_tokens,
-        system=system_prompt,
-        messages=[{"role": "user", "content": f"Baslik: {title}\n\nOzet: {summary}"}],
-    )
-    raw_text = message.content[0].text.strip()
-    raw_text = raw_text.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-    return json.loads(raw_text)
+    for attempt in range(2):
+        message = client.messages.create(
+            model=CLASSIFIER_MODEL,
+            max_tokens=max_tokens * (attempt + 1),
+            system=system_prompt,
+            messages=[{"role": "user", "content": f"Baslik: {title}\n\nOzet: {summary}"}],
+        )
+        raw_text = message.content[0].text.strip()
+        raw_text = raw_text.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        try:
+            return json.loads(raw_text)
+        except json.JSONDecodeError:
+            if attempt:
+                raise
+            logging.getLogger(__name__).warning(
+                "Invalid classifier JSON; retrying once (stop_reason=%s)",
+                getattr(message, 'stop_reason', 'unknown'),
+            )
 
 
 def classify(title: str, summary: str) -> ClassificationResult:
@@ -127,6 +155,9 @@ Türkçeleştirme.
 SADECE geçerli JSON döndür, başka hiçbir metin ekleme:
 {"title_tr": str, "summary_tr": str}
 """
+
+
+TRANSLATE_SYSTEM_PROMPT += TURKISH_EDITORIAL_STYLE
 
 
 def translate(title: str, summary: str) -> tuple[str, str]:

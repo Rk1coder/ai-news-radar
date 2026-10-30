@@ -53,9 +53,25 @@ def test_classify_defaults_missing_translation_fields_to_empty_string():
 
 
 def test_classify_raises_on_malformed_json():
-    patcher, _ = mock_anthropic("not json at all")
+    patcher, client = mock_anthropic("not json at all")
     with patcher, pytest.raises(json.JSONDecodeError):
         classify("t", "s")
+    assert client.messages.create.call_count == 2
+
+
+def test_classify_retries_invalid_json_once_with_more_output_space():
+    payload = {"technical_impact_score": 70, "hype_score": 40,
+               "applicability_score": 60, "sector_tags": [], "rationale": "r",
+               "title_tr": "Yeni model yayımlandı", "summary_tr": "Model sunuldu."}
+    patcher, client = mock_anthropic('')
+    client.messages.create.side_effect = [
+        Mock(content=[Mock(text='{"summary_tr": "yarım')], stop_reason='max_tokens'),
+        Mock(content=[Mock(text=json.dumps(payload))], stop_reason='end_turn'),
+    ]
+    with patcher:
+        result = classify('t', 's')
+    assert result.title_tr == payload['title_tr']
+    assert [call.kwargs['max_tokens'] for call in client.messages.create.call_args_list] == [1024, 2048]
 
 
 def test_classify_raises_on_missing_required_field():

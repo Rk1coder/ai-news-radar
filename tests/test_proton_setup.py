@@ -36,3 +36,22 @@ def test_explicit_test_recipient_overrides_unrelated_exported_mail_settings(tmp_
     assert env['EMAIL_SMTP_USER']=='sender@proton.me'
     assert env['EMAIL_SMTP_PASSWORD']=='bridge-test-value'
     assert 'bridge-test-value' not in str(calls[-1][0])
+
+
+def test_connection_can_be_saved_when_scheduler_is_stopped(tmp_path, monkeypatch):
+    spec=importlib.util.spec_from_file_location('connect_proton',Path(__file__).parents[1]/'scripts/connect_proton.py')
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    monkeypatch.setattr(module,'ROOT',tmp_path)
+    monkeypatch.setattr(module.sys,'argv',['connect_proton.py','--account','sender@proton.me'])
+    monkeypatch.setattr(module.sys.stdin,'isatty',lambda:True)
+    monkeypatch.setattr(module.getpass,'getpass',lambda prompt:'bridge-test-value')
+    def run(command, **kwargs):
+        if 'exec' in command:
+            raise module.subprocess.CalledProcessError(1, command, stderr='service scheduler is not running')
+        return module.subprocess.CompletedProcess(command, 0)
+    monkeypatch.setattr(module.subprocess,'run',run)
+    module.main()
+    saved=(tmp_path/'.env').read_text()
+    assert 'EMAIL_SMTP_USER="sender@proton.me"' in saved
+    assert 'EMAIL_ENABLED="false"' in saved

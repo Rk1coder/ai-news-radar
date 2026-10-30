@@ -1,0 +1,14 @@
+--- a/protonmail/attachments.go
++++ b/protonmail/attachments.go
+@@ -173,7 +173,10 @@
+ 			return
+ 		}
+ 
+-		// TODO: Signature
++		if err := writeAttachmentSignature(mw, att.Signature); err != nil {
++			pw.CloseWithError(err)
++			return
++		}
+ 
+ 		pw.CloseWithError(mw.Close())
+ 	}()

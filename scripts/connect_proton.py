@@ -75,7 +75,9 @@ except Exception as exc:
     sys.exit(1)
 print('Proton SMTP bağlantısı doğrulandı.')
 '''
-    _run(['exec', '-T', 'scheduler', 'python', '-c', verify],
+    # This probe works when the application is stopped and never accesses the database.
+    _run(['run', '--rm', '--no-deps', '-T', '-e', 'EMAIL_ENABLED=false',
+          '-e', 'TELEGRAM_ENABLED=false', 'scheduler', 'python', '-c', verify],
          input=json.dumps({'user': args.account, 'password': bridge}), text=True)
     settings = {
         'EMAIL_ENABLED': 'false', 'EMAIL_SMTP_HOST': 'hydroxide', 'EMAIL_SMTP_PORT': '1025',

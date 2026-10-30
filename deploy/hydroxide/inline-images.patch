@@ -1,0 +1,26 @@
+--- a/smtp/smtp.go
++++ b/smtp/smtp.go
+@@ -183,6 +183,7 @@
+ 			return err
+ 		}
+ 
++		normalizeInlineImagePart(p)
+ 		switch h := p.Header.(type) {
+ 		case *mail.InlineHeader:
+ 			t, _, err := h.ContentType()
+@@ -214,10 +215,14 @@
+ 				MessageID: msg.ID,
+ 				Name:      filename,
+ 				MIMEType:  t,
+-				ContentID: h.Get("Content-Id"),
++				ContentID: protonContentID(h.Get("Content-Id")),
+ 				// TODO: Header
+ 			}
+ 
++			p.Body, err = signOutgoingAttachment(att, p.Body, privateKey)
++			if err != nil {
++				return fmt.Errorf("cannot sign attachment: %v", err)
++			}
+ 			attKey, err := att.GenerateKey([]*openpgp.Entity{privateKey})
+ 			if err != nil {
+ 				return fmt.Errorf("cannot generate attachment key: %v", err)

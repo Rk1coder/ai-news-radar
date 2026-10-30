@@ -41,7 +41,7 @@ def test_same_event_coverage_is_one_item_with_all_sources_and_no_new_text():
     assert grouped[0].related_sources==tuple(stories[1:6])
     html=render_html(grouped,'28.10.2026')
     plain=render_text(grouped,'28.10.2026')
-    assert html.count('<h2 ')==2
+    assert html.count('<h3 ')==2
     assert 'Diğer kaynaklar' in html
     assert all(story.raw_item.url in html and story.raw_item.url in plain for story in stories)
 

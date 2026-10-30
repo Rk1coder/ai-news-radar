@@ -3,6 +3,7 @@ import base64
 import logging
 import smtplib
 import ssl
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
@@ -24,6 +25,7 @@ from ai_news_radar.config import (
 from ai_news_radar.models import Development, EmailDigestAttempt, EmailDigestLog, RawItem
 from ai_news_radar.notifications.email_template import render_html as _render_html, render_text
 from ai_news_radar.notifications.email_grouping import group_digest_stories
+from ai_news_radar.notifications.email_images import collect_story_images
 
 log = logging.getLogger(__name__)
 
@@ -85,10 +87,15 @@ def _top_stories(session, limit=12, *, now=None, grouping=None):
 
 
 def _logo_bytes():
-    return files("ai_news_radar").joinpath("assets/radar-logo.png").read_bytes()
+    return files("ai_news_radar").joinpath("assets/radar-logo-web.png").read_bytes()
 
 
-def build_message(stories, now, *, message_id=None):
+def build_message(stories, now, *, message_id=None, images=None):
+    # Use RFC message identifiers (including @domain) for MIME Content-ID values.
+    # Normalize cached covers too; every message gets unique matching HTML/MIME IDs.
+    logo_cid = make_msgid(idstring='radar-logo', domain='radar.local')[1:-1]
+    images = {url: replace(cover, cid=make_msgid(idstring='radar-cover', domain='radar.local')[1:-1])
+              for url, cover in (images or {}).items()}
     msg = MIMEMultipart("related")
     msg["Subject"] = f"Radar · Günlük AI Özeti · {_local(now):%d.%m.%Y}"
     msg["From"] = formataddr(("Radar", EMAIL_FROM))
@@ -98,13 +105,34 @@ def build_message(stories, now, *, message_id=None):
     alternative = MIMEMultipart("alternative")
     label = _local(now).strftime("%d.%m.%Y")
     alternative.attach(MIMEText(render_text(stories, label, timezone=SCAN_TIMEZONE), "plain", "utf-8"))
-    alternative.attach(MIMEText(_render_html(stories, label, timezone=SCAN_TIMEZONE, public_url=EMAIL_PUBLIC_URL), "html", "utf-8"))
+    html = _render_html(stories, label, timezone=SCAN_TIMEZONE, public_url=EMAIL_PUBLIC_URL, images=images)
+    html = html.replace('cid:radar-logo', 'cid:' + logo_cid)
+    alternative.attach(MIMEText(html, "html", "utf-8"))
     msg.attach(alternative)
     logo = MIMEImage(_logo_bytes(), _subtype="png")
-    logo.add_header("Content-ID", "<radar-logo>")
+    logo.add_header("Content-ID", f"<{logo_cid}>")
     logo.add_header("Content-Disposition", "inline", filename="radar-logo.png")
     msg.attach(logo)
+    for url in dict.fromkeys(story.raw_item.url for story in stories):
+        cover = (images or {}).get(url)
+        if cover:
+            image = MIMEImage(cover.data, _subtype=cover.subtype)
+            image.add_header("Content-ID", f"<{cover.cid}>")
+            image.add_header("Content-Disposition", "inline", filename=f"{cover.cid}.{cover.subtype}")
+            msg.attach(image)
     return msg
+
+
+def preview_html(msg):
+    """Use exactly the sent HTML and inline assets in browser previews."""
+    html = next(part.get_payload(decode=True).decode('utf-8') for part in msg.walk()
+                if part.get_content_type() == 'text/html')
+    for part in msg.walk():
+        cid = part.get('Content-ID')
+        if cid and part.get_content_maintype() == 'image':
+            data = base64.b64encode(part.get_payload(decode=True)).decode('ascii')
+            html = html.replace('cid:' + cid.strip('<>'), f'data:{part.get_content_type()};base64,{data}')
+    return html
 
 
 def _claim(session, now):
@@ -153,7 +181,8 @@ def send_daily_digest(session, now=None, *, force=False) -> bool:
     transmitting, accepted = False, False
     try:
         stories = _top_stories(session, now=now)
-        msg = build_message(stories, now, message_id=attempt.message_id)
+        images = collect_story_images(stories)
+        msg = build_message(stories, now, message_id=attempt.message_id, images=images)
         context = ssl.create_default_context()
         transport = smtplib.SMTP_SSL if EMAIL_SMTP_SECURITY == "ssl" else smtplib.SMTP
         options = {"timeout": 30}
@@ -196,9 +225,8 @@ def main():
     if args.preview:
         with get_session() as session:
             stories = _top_stories(session, now=now)
-            msg = build_message(stories, now)
-            html = _render_html(stories, _local(now).strftime("%d.%m.%Y"), timezone=SCAN_TIMEZONE, public_url=EMAIL_PUBLIC_URL)
-            html = html.replace("cid:radar-logo", "data:image/png;base64," + base64.b64encode(_logo_bytes()).decode())
+            msg = build_message(stories, now, images=collect_story_images(stories))
+            html = preview_html(msg)
             args.preview.parent.mkdir(parents=True, exist_ok=True)
             args.preview.write_text(html, encoding="utf-8")
             args.preview.with_suffix(".eml").write_bytes(msg.as_bytes())

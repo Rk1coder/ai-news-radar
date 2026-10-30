@@ -113,8 +113,10 @@ def test_complete_message_has_plain_html_date_message_id_and_inline_logo():
     assert parsed['Message-ID'] and parsed['Date']
     assert {'text/plain','text/html','image/png'} <= {part.get_content_type() for part in parsed.walk()}
     html=next(p.get_payload(decode=True).decode() for p in parsed.walk() if p.get_content_type()=='text/html')
-    assert 'cid:radar-logo' in html
-    assert any(p.get('Content-ID')=='<radar-logo>' for p in parsed.walk())
+    logo = next(p for p in parsed.walk() if p.get_filename() == 'radar-logo.png')
+    cid = logo['Content-ID'].strip('<>')
+    assert '@' in cid
+    assert 'cid:' + cid in html
     assert 'Neden önemli' in html
 
 

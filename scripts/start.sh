@@ -6,7 +6,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 if [ ! -f .env ]; then
   echo "'.env' bulunamadı, '.env.example'dan oluşturuluyor..."
   cp .env.example .env
-  echo "'.env' dosyasını DATABASE_URL ve ANTHROPIC_API_KEY ile doldurup bu scripti tekrar çalıştırın."
+  echo "'.env' dosyasında API/Telegram/SMTP bilgilerini doldurun; ardından .venv/bin/python scripts/setup_local_db.py komutunu çalıştırın."
   exit 1
 fi
 

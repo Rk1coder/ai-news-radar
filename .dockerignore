@@ -6,3 +6,6 @@ __pycache__/
 tests/
 frontend/node_modules/
 .git/
+.env
+backups/
+outputs/

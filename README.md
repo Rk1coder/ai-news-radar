@@ -14,6 +14,13 @@ ve Node/Express/EJS arayüzünden oluşur.
 | --- | --- |
 | ![Radar Asistanı sohbet paneli](docs/screenshots/chat-assistant.jpg) | ![Ayarlar paneli](docs/screenshots/settings-panel.jpg) |
 
+### Günlük e-posta bülteni
+
+Radar logosu, haber kapakları, kaynak bağlantıları ve konu bölümleriyle hazırlanan
+günlük HTML e-posta taslağından bir görünüm:
+
+![Radar günlük e-posta bülteni](docs/screenshots/daily-email.jpg)
+
 ## Öne çıkan özellikler
 
 - **Otomatik haber taraması** — arXiv, Hugging Face, GitHub, Reddit, bloglar ve daha
@@ -35,23 +42,23 @@ ve Node/Express/EJS arayüzünden oluşur.
 
 ## Kurulum (Docker)
 
-Veritabanı artık Docker'ın içinde değil, **uzak/yönetilen bir Postgres**'tir (örn.
-[Neon](https://neon.tech), Supabase, Railway veya kendi sunucunuz) — böylece
-uygulamayı hangi bilgisayarda ayağa kaldırırsanız kaldırın, aynı haber geçmişine
-bağlanırsınız; veri tek bir makinenin diskine bağlı kalmaz.
+Veritabanı Docker içinde kalıcı PostgreSQL olarak çalışır. Ayrıntılar için
+[sunucu kurulumu ve yedekleme](docs/self-hosting.md) rehberini kullanın.
 
 ```bash
-cp .env.example .env
-# DATABASE_URL'i kendi Postgres bağlantı string'inizle doldurun (bkz. .env.example
-# içindeki not). ANTHROPIC_API_KEY değerini de doldurun.
 # Mevcut .env dosyanız varsa üzerine yazmayın.
-docker compose up -d --build
+cp -n .env.example .env
+# ANTHROPIC_API_KEY ve kullanılacak Telegram/SMTP bilgilerini doldurun.
+# .venv yoksa önce Python ortamını ve proje bağımlılıklarını kurun.
+.venv/bin/python scripts/setup_local_db.py
+./scripts/start.sh
 ```
 
 Arayüz: http://localhost:3000 · API: http://localhost:8008
 
-Servisler: `api` (FastAPI), `scheduler` (otomatik tarama), `frontend` (Node/Express
-arayüz). Hepsi `docker-compose.yml` içinde tanımlı, tek komutla ayağa kalkar.
+Servisler: `api`, `scheduler`, `frontend`, `postgres`, `db-backup` ve Proton
+kullanılıyorsa `hydroxide`. Kurulum komutu `.env` içinde iki Compose dosyasını
+seçer; servisler tek komutla ayağa kalkar.
 
 Değişiklik sonrası yeniden derleme gerekir (imajlar volume mount kullanmaz):
 
@@ -85,7 +92,7 @@ yerel olarak paketlenir.
 
 | Bölüm | Neden |
 | --- | --- |
-| Veritabanı (her şey) | `DATABASE_URL` uzak bir Postgres'e (örn. Neon) işaret ediyor — bir haberi **görüntülemek** bile internet ister. |
+| Veritabanı | Uzak PostgreSQL kullanılıyorsa internet gerekir. Yerel PostgreSQL kurulumunda kayıtlı haberler internetsiz görüntülenebilir. |
 | Yeni haber taraması | RSS/Atom kaynakları (arXiv, GitHub, Reddit, bloglar...) dış sunuculardan çekiliyor. |
 | LLM sınıflandırma/çeviri | Her yeni haberde `api.anthropic.com` çağrısı. |
 | Radar Asistanı (sohbet) | Anthropic API + orijinal makale metnini kaynağın kendi URL'sinden çekme (`chat.py`). |
@@ -96,13 +103,9 @@ yerel olarak paketlenir.
 **İnternet gerektirmeyen (build sonrası tamamen yerel):** arayüzün statik dosyaları
 (CSS, JS, fontlar, ikonlar) ve bunların PWA service worker önbelleği.
 
-Özetle: veritabanı uzak olduğu için bu kurulumla **tamamen offline bir ortamda
-uygulama hiç açılmaz** — en azından DB'ye ulaşmak şart. Tamamen offline/air-gapped
-çalışması gereken bir demo için `DATABASE_URL`'i yerel bir Postgres'e (veya
-`docker-compose.yml`'e eklenecek bir `postgres` servisine) yönlendirip veriyi
-`pg_dump`/`pg_restore` ile o yerel veritabanına taşımanız gerekir — ama bu durumda
-"her bilgisayardan aynı veriye eriş" özelliğinden vazgeçmiş olursunuz; ikisi
-birbirini dışlar.
+Yerel PostgreSQL kurulumunda kayıtlı haberler internet bağlantısı olmadan
+görüntülenebilir. Yeni haberlerin alınması, model çağrıları ve bildirim gönderimi
+için internet bağlantısı gerekir.
 
 ## Otomatik haber akışı
 
@@ -125,7 +128,8 @@ birbirini dışlar.
   sırasında ihtiyaç olduğunda hazırlanır. Yeni haber olmadığı durumda eski
   içerik yeniymiş gibi sunulmaz.
 - Telegram, aşağıdaki ayarlar açıldığında yeni haberleri kanal/grup kuyruğuna alır.
-  Gönderici scheduler servisinde çalışır; e-posta gönderilmez.
+  Telegram göndericisi scheduler servisinde çalışır. Günlük e-posta özeti
+  ayrıca SMTP ayarlarıyla etkinleştirilir.
 
 Bu kurulumun çalışması için **bilgisayar/sunucu ve Docker açık olmalı**. Docker
 kapatılırsa ya da bilgisayar uyursa tarama yapılamaz. Servisler Docker yeniden

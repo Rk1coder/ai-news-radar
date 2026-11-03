@@ -72,15 +72,14 @@ def test_collection_skips_unavailable_and_unsupported_images():
 
 
 def test_real_image_is_embedded_once_and_preview_resolves_cid():
-    from importlib.resources import files
-    png=files('ai_news_radar').joinpath('assets/radar-logo-transparent.png').read_bytes()
+    png=raster_bytes(mode='RGBA')
     item=story()
     page=b'<meta property="og:image" content="/cover.png">'
     with patch.object(images,'fetch_public',side_effect=[(page,item.raw_item.url,'text/html'),(png,'https://blogs.nvidia.com/cover.png','image/png')]):
         covers=images.collect_story_images([item])
     assert len(covers)==1
     msg=build_message([item],datetime(2026,10,30,tzinfo=UTC),images=covers)
-    parts=[p for p in msg.walk() if p.get('Content-ID') and p.get_filename()!='radar-logo.png']
+    parts=[p for p in msg.walk() if p.get('Content-ID')]
     assert len(parts)==1 and parts[0].get_payload(decode=True)==covers[item.raw_item.url].data
     assert all('@' in p['Content-ID'] for p in msg.walk() if p.get('Content-ID'))
     html=next(p.get_payload(decode=True).decode() for p in msg.walk() if p.get_content_type()=='text/html')

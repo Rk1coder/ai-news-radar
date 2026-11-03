@@ -6,7 +6,7 @@ import requests
 
 from ai_news_radar.ingestion.base import FetchedItem, strip_html
 
-USER_AGENT = "Mozilla/5.0 (compatible; ai-news-radar/0.1)"
+USER_AGENT = "Mozilla/5.0 (compatible; ai-news/0.1)"
 
 
 def select_recent(items, max_results, lookback_days=None, latest_fallback=0, *, now=None):

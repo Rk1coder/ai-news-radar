@@ -1,25 +1,8 @@
-# AI News Radar
+# AI Haberleri
 
 Yapay zekâ ve yakın teknoloji haberlerini kaynaklardan toplayan, sınıflandıran ve
 haber bağlamında sohbet sunan uygulama. Python/FastAPI API, PostgreSQL veritabanı
 ve Node/Express/EJS arayüzünden oluşur.
-
-## Ekran görüntüleri
-
-| Ana sayfa (açık tema) | Ana sayfa (koyu tema) |
-| --- | --- |
-| ![Ana sayfa, açık tema](docs/screenshots/dashboard-light.jpg) | ![Ana sayfa, koyu tema](docs/screenshots/dashboard-dark.jpg) |
-
-| Radar Asistanı (haber bağlamında sohbet) | Ayarlar paneli |
-| --- | --- |
-| ![Radar Asistanı sohbet paneli](docs/screenshots/chat-assistant.jpg) | ![Ayarlar paneli](docs/screenshots/settings-panel.jpg) |
-
-### Günlük e-posta bülteni
-
-Radar logosu, haber kapakları, kaynak bağlantıları ve konu bölümleriyle hazırlanan
-günlük HTML e-posta taslağından bir görünüm:
-
-![Radar günlük e-posta bülteni](docs/screenshots/daily-email.jpg)
 
 ## Öne çıkan özellikler
 
@@ -27,7 +10,7 @@ günlük HTML e-posta taslağından bir görünüm:
   fazlası dahil onlarca kaynağı varsayılan olarak 15 dakikada bir tarar.
 - **LLM ile sınıflandırma ve Türkçe çeviri** — her haberi teknik etki/hype/
   uygulanabilirlik eksenlerinde puanlar, sektör etiketler ve akıcı Türkçeye çevirir.
-- **Haber bağlamında sohbet (Radar Asistanı)** — seçili haberin başlığı, özeti ve
+- **Haber bağlamında sohbet (Haber Asistanı)** — seçili haberin başlığı, özeti ve
   orijinal makale metnine dayanarak soru-cevap yapar.
 - **Konu/anahtar kelime arama** — Türkçe ve İngilizce eşleşen terimlerle arama,
   sektör/kaynak/öncelik filtreleri.
@@ -95,7 +78,7 @@ yerel olarak paketlenir.
 | Veritabanı | Uzak PostgreSQL kullanılıyorsa internet gerekir. Yerel PostgreSQL kurulumunda kayıtlı haberler internetsiz görüntülenebilir. |
 | Yeni haber taraması | RSS/Atom kaynakları (arXiv, GitHub, Reddit, bloglar...) dış sunuculardan çekiliyor. |
 | LLM sınıflandırma/çeviri | Her yeni haberde `api.anthropic.com` çağrısı. |
-| Radar Asistanı (sohbet) | Anthropic API + orijinal makale metnini kaynağın kendi URL'sinden çekme (`chat.py`). |
+| Haber Asistanı (sohbet) | Anthropic API + orijinal makale metnini kaynağın kendi URL'sinden çekme (`chat.py`). |
 | Link önizleme | Habere tıklayınca OG metadata'yı kaynağın URL'sinden çeker (`link_preview.py`). |
 | Telegram bildirimleri | `api.telegram.org` çağrısı. |
 | Günlük e-posta özeti | SMTP sunucusuna (Gmail, Proton Bridge vb.) bağlanma. |
@@ -192,7 +175,7 @@ Arama kutusu Türkçe ve orijinal başlık/özetleri, sektör etiketlerini ve ka
 
 Önerilen sıralama, arama varken ilgi düzeyini; boş aramada yayın tarihini kullanır. Tarih, kaynak, sektör, öncelik ve teyit filtreleri korunur. Seçili tarihte sonuç bulunmazsa aynı diğer filtrelerle arşivdeki eşleşme sayısı ve aramayı koruyan bağlantı gösterilir.
 
-Bu özellik mevcut kayıtlar üzerinde çalışan bir konu sözlüğü ve metin aramasıdır; sınırsız anlamsal arama, serbest soru yanıtlama veya yazım hatası düzeltme değildir. Yeni konu karşılıkları `src/ai_news_radar/search.py` içindeki `TOPICS` sözlüğüne eklenebilir. Arşiv büyüdüğünde arama indeksine geçiş değerlendirilmelidir. Radar Asistanı halen seçili haberin bağlamında yanıt verir.
+Bu özellik mevcut kayıtlar üzerinde çalışan bir konu sözlüğü ve metin aramasıdır; sınırsız anlamsal arama, serbest soru yanıtlama veya yazım hatası düzeltme değildir. Yeni konu karşılıkları `src/ai_news_radar/search.py` içindeki `TOPICS` sözlüğüne eklenebilir. Arşiv büyüdüğünde arama indeksine geçiş değerlendirilmelidir. Haber Asistanı halen seçili haberin bağlamında yanıt verir.
 
 
 ## Telegram kanal/grup akışı
@@ -209,7 +192,7 @@ Gönderimi durdurmak için `TELEGRAM_ENABLED=false` yapıp API ve scheduler'ı y
 
 ## Günlük AI özeti e-postası
 
-Günde **16:00'da (Europe/Istanbul)** son 24 saatin en öncelikli 12 haberini Radar logosu, Türkçe özet, önem açıklaması ve kaynak bağlantılarıyla tek e-postada toplar. Gönderim haber taramasından bağımsız işçide yaklaşık 30 saniyede bir kontrol edilir. Logo gömülüdür; HTML ve düz metin sürümleri birlikte gönderilir. Kaynak politikasında uygun sayılan içerikler seçilir; bu durum bağımsız çapraz teyit anlamına gelmez. Eski yayınların yeni taranmış olması onları günlük haberlere dahil etmez.
+Günde **16:00'da (Europe/Istanbul)** son 24 saatin en öncelikli 12 haberini Türkçe özet, önem açıklaması ve kaynak bağlantılarıyla tek e-postada toplar. Gönderim haber taramasından bağımsız işçide yaklaşık 30 saniyede bir kontrol edilir. Haber görselleri gömülüdür; HTML ve düz metin sürümleri birlikte gönderilir. Kaynak politikasında uygun sayılan içerikler seçilir; bu durum bağımsız çapraz teyit anlamına gelmez. Eski yayınların yeni taranmış olması onları günlük haberlere dahil etmez.
 
 Bülten sınırı olaylar birleştirildikten sonra uygulanır: en öncelikli 80 aday arasındaki aynı duyuruya ait yayınlar tek başlıkta gösterilir, diğer kaynakları başlık altında korunur. Eşleştirme yereldir; model/sürüm/varyant, olay türü ve başlık/özet benzerliği kullanır. Sadece aynı şirketten olması haberleri birleştirmez. Farklı anlatımlardaki tüm tekrarları kusursuz tanıma garantisi yoktur.
 
@@ -225,7 +208,7 @@ EMAIL_SMTP_PASSWORD=   # Gmail: myaccount.google.com/apppasswords
 EMAIL_FROM=you@gmail.com
 EMAIL_RECIPIENTS=you@example.com,someone@example.com
 EMAIL_SEND_HOUR=16
-EMAIL_PUBLIC_URL=https://your-radar-domain.example
+EMAIL_PUBLIC_URL=https://your-news-domain.example
 ```
 
 Ayarladıktan sonra `docker compose up -d --build api scheduler` çalıştırın. Gönderim durumu ve saati beklemeden hemen test etmek için:
@@ -235,7 +218,7 @@ docker compose exec -T scheduler python -m ai_news_radar.notifications.email    
 docker compose exec -T scheduler python -m ai_news_radar.notifications.email --send-now   # hemen gönder
 ```
 
-`--send-now` yalnızca saat kontrolünü atlar; günlük geçmişi silmez. Önizleme için `python -m ai_news_radar.notifications.email --preview outputs/radar-daily-email.html` kullanın; bu komut e-posta göndermez.
+`--send-now` yalnızca saat kontrolünü atlar; günlük geçmişi silmez. Önizleme için `python -m ai_news_radar.notifications.email --preview outputs/daily-email.html` kullanın; bu komut e-posta göndermez.
 
 `email_digest_attempts` tablosu SMTP'den önce günlük gönderimi atomik olarak sahiplenir. Açıkça reddedilen gönderimler 5 dakika sonra tekrar denenir; SMTP kabul ettikten sonra bağlantının sonucu belirsizse otomatik tekrar durur. `sending`/`uncertain` durumunda Proton Gönderilenler klasörü kontrol edilmelidir. SMTP uçtan uca tam-bir-kez teslim garantisi vermez. `email_digest_log` yalnızca SMTP'nin kabul ettiği gönderimi kaydeder; alıcının gelen kutusuna ulaştığını doğrulamaz.
 

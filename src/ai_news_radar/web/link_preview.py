@@ -2,7 +2,7 @@ import re
 
 import requests
 
-USER_AGENT = "Mozilla/5.0 (compatible; ai-news-radar/0.1)"
+USER_AGENT = "Mozilla/5.0 (compatible; ai-news/0.1)"
 _META_TAG_RE = re.compile(r"<meta\s+[^>]*>", re.IGNORECASE)
 _ATTR_RE = re.compile(r"""(\w[\w:-]*)\s*=\s*"([^"]*)"|(\w[\w:-]*)\s*=\s*'([^']*)'""")
 

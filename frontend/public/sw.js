@@ -1,6 +1,6 @@
 // shortcut: cache-first for a fixed static asset list; no versioned cache busting beyond CACHE_NAME —
 // bump CACHE_NAME when any cached file's content changes meaningfully.
-const CACHE_NAME = "radar-static-v6";
+const CACHE_NAME = "ai-news-static-v7";
 const ASSETS = [
   "/styles.css",
   "/app.js",
@@ -12,26 +12,25 @@ const ASSETS = [
   "/assistant-motion.js",
   "/vendor/gsap.min.js",
   "/manifest.webmanifest",
-  "/radar.svg",
-  "/radar-favicon.svg",
-  "/radar-logo.png",
   "/fonts/inter-latin.woff2",
   "/fonts/inter-latin-ext.woff2",
   "/fonts/source-serif-4-latin.woff2",
   "/fonts/source-serif-4-latin-ext.woff2",
-  "/fonts/audiowide-latin.woff2",
-  "/fonts/audiowide-latin-ext.woff2",
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(ASSETS))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+    ).then(() => self.clients.claim())
   );
 });
 

@@ -107,16 +107,14 @@ def test_selects_recent_publications_not_old_articles_fetched_today(sessions):
         assert {d.title_tr for d in stories}=={'Story 0','Story 3'}
 
 
-def test_complete_message_has_plain_html_date_message_id_and_inline_logo():
+def test_complete_message_has_plain_html_date_message_id_without_brand_attachment():
     msg=email.build_message([make_development()],datetime(2026,10,28,13,tzinfo=UTC))
     parsed=message_from_bytes(msg.as_bytes())
     assert parsed['Message-ID'] and parsed['Date']
-    assert {'text/plain','text/html','image/png'} <= {part.get_content_type() for part in parsed.walk()}
+    assert {'text/plain','text/html'} <= {part.get_content_type() for part in parsed.walk()}
+    assert not any(part.get_content_maintype() == 'image' for part in parsed.walk())
     html=next(p.get_payload(decode=True).decode() for p in parsed.walk() if p.get_content_type()=='text/html')
-    logo = next(p for p in parsed.walk() if p.get_filename() == 'radar-logo.png')
-    cid = logo['Content-ID'].strip('<>')
-    assert '@' in cid
-    assert 'cid:' + cid in html
+    assert 'cid:' not in html
     assert 'Neden önemli' in html
 
 

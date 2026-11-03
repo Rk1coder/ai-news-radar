@@ -2,22 +2,22 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-<meta name="theme-color" content="#ffffff"><title>Radar · Gelişmeleri keşfet</title>
-<link rel="icon" href="/radar-favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#ffffff"><title>AI Haberleri · Gelişmeleri keşfet</title>
+<link rel="icon" href="data:,">
 <link rel="manifest" href="/manifest.webmanifest">
 <script>try{var t=localStorage.getItem("radar-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
 <script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js")})}</script>
-<link rel="stylesheet" href="/styles.css?v=scan-program-20261028"><script defer src="/chat-state.js"></script><script defer src="/live-feed.js"></script><script defer src="/vendor/gsap.min.js?v=3.15.0"></script><script defer src="/assistant-motion.js?v=assistant-topbar-20261028"></script><script defer src="/app.js?v=assistant-topbar-20261028"></script><script defer src="/settings-motion.js?v=settings-20261028-1"></script><script defer src="/scan-program.js?v=scan-program-20261028"></script><script defer src="/settings.js?v=scan-program-20261028"></script>
+<link rel="stylesheet" href="/styles.css?v=unbranded-20261103"><script defer src="/chat-state.js"></script><script defer src="/live-feed.js"></script><script defer src="/vendor/gsap.min.js?v=3.15.0"></script><script defer src="/assistant-motion.js?v=unbranded-20261103"></script><script defer src="/app.js?v=unbranded-20261103"></script><script defer src="/settings-motion.js?v=settings-20261028-1"></script><script defer src="/scan-program.js?v=unbranded-20261103"></script><script defer src="/settings.js?v=unbranded-20261103"></script>
 </head>
 <body>
 <a class="skip-link" href="#news-list">Haberlere geç</a>
   <header class="topbar page-topbar" id="page-header">
-    <a class="brand wordmark" href="/" aria-label="Radar ana sayfa"><strong>RADAR</strong><span>AI NEWS DETECT &amp; BLOG</span></a>
+    <a class="home-link" href="/" aria-label="AI Haberleri ana sayfa">AI Haberleri</a>
     <div class="topbar-actions">
       <form action="/refresh" method="post" id="refresh-form"><button class="button subtle refresh" type="submit" aria-label="Haberleri güncelle"><%- icon('arrows-clockwise') %><span>Güncelle</span></button></form>
       <a class="button subtle telegram-link" href="https://t.me/+PLz5p6UnqV03NmFk" target="_blank" rel="noopener noreferrer"><%- icon('telegram-logo') %><span>Telegram</span></a>
       <button class="button subtle settings-trigger" type="button" id="open-settings" aria-label="Ayarları aç" aria-haspopup="dialog" aria-expanded="false" aria-controls="settings-modal"><%- icon('sliders-horizontal') %><span>Ayarlar</span></button>
-      <button class="assistant-launcher button subtle open-assistant" id="assistant-launcher" type="button" aria-label="Radar Asistanı’nı aç" aria-expanded="false" aria-controls="assistant"><%- icon('sparkle') %><span>Radar Asistanı</span></button>
+      <button class="assistant-launcher button subtle open-assistant" id="assistant-launcher" type="button" aria-label="Haber Asistanı’nı aç" aria-expanded="false" aria-controls="assistant"><%- icon('sparkle') %><span>Haber Asistanı</span></button>
     </div>
   </header>
 <div class="page" id="page-content">
@@ -30,7 +30,7 @@
   <div id="digest-region">
   <% if(weekly_digest && weekly_digest.content) { %>
   <details class="briefing">
-    <summary><span class="brief-icon"><%- icon('newspaper') %></span><span class="brief-text"><strong>Radar özeti <span class="brief-label">SON 7 GÜNDE TARANAN</span></strong><span class="brief-excerpt"><%= weekly_digest.content %></span></span><%- icon('caret-down') %></summary>
+    <summary><span class="brief-icon"><%- icon('newspaper') %></span><span class="brief-text"><strong>Haftalık özet <span class="brief-label">SON 7 GÜNDE TARANAN</span></strong><span class="brief-excerpt"><%= weekly_digest.content %></span></span><%- icon('caret-down') %></summary>
     <div class="brief-full"><p><%= weekly_digest.content %></p><span class="muted"><%= weekly_digest.story_count %> gelişmeden oluşturuldu · <%= digestLabel %> · Yayın tarihleri farklı olabilir.</span></div>
   </details>
   <% } %>
@@ -79,7 +79,7 @@
         <a href="<%= qs({period:'all'}) %>" class="button primary">Tüm tarihlerdeki haberleri göster</a>
       <% } %>
     </div><% } %>
-    <% developments.forEach((d,idx)=>{ const source=sourceLabel(d.raw_item.source.name); const title=d.title_tr||d.raw_item.title; const summary=d.summary_tr||d.raw_item.summary||'Bu gelişmenin ayrıntılarını incele veya Radar Asistanı’na sor.'; const url=safeUrl(d.raw_item.url); %>
+    <% developments.forEach((d,idx)=>{ const source=sourceLabel(d.raw_item.source.name); const title=d.title_tr||d.raw_item.title; const summary=d.summary_tr||d.raw_item.summary||'Bu gelişmenin ayrıntılarını incele veya Haber Asistanı’na sor.'; const url=safeUrl(d.raw_item.url); %>
     <article class="story" data-id="<%= d.id %>" data-dev="<%= JSON.stringify({id:d.id,title,summary,url,source,date:formatDate(d.raw_item.published_at),verified:d.verified}) %>">
       <div class="story-layout"><img class="story-image" alt="" loading="lazy" hidden>
         <div class="story-body">
@@ -96,15 +96,15 @@
     <% }) %>
   </main>
   <div class="load-more" hidden><p id="visible-count" class="muted"></p><button class="button subtle" id="load-more" type="button">Daha fazla haber <%- icon('caret-down') %></button></div>
-  <footer class="page-footer"><a class="wordmark footer-brand" href="/" aria-label="Radar ana sayfa"><strong>RADAR</strong><span>AI NEWS DETECT &amp; BLOG</span></a><span>Kaynağı incele. Bağlamı anla.</span></footer>
+  <footer class="page-footer"><a class="home-link" href="/" aria-label="AI Haberleri ana sayfa">AI Haberleri</a><span>Kaynağı incele. Bağlamı anla.</span></footer>
 </div>
 <aside class="assistant" id="assistant" aria-labelledby="assistant-title" hidden>
-  <header class="assistant-header"><div class="assistant-name"><%- icon('sparkle') %><h2 id="assistant-title">Radar Asistanı</h2></div><button type="button" class="icon-button" id="close-chat" aria-label="Sohbeti kapat"><%- icon('x') %></button></header>
+  <header class="assistant-header"><div class="assistant-name"><%- icon('sparkle') %><h2 id="assistant-title">Haber Asistanı</h2></div><button type="button" class="icon-button" id="close-chat" aria-label="Sohbeti kapat"><%- icon('x') %></button></header>
   <div class="assistant-content">
   <p class="assistant-tagline">Gündemi birlikte anlamlandıralım.</p>
   <div class="chat-context" id="chat-context" hidden><span class="eyebrow">BU HABER HAKKINDA</span><h3 id="chat-title"></h3><div class="context-meta"><span id="chat-source"></span><a id="chat-link" target="_blank" rel="noopener noreferrer">Kaynağı aç <%- icon('arrow-up-right') %></a></div></div>
   <div class="chat-scroll" id="chat-scroll" tabindex="0" aria-label="Sohbet mesajları">
-    <div class="chat-welcome" id="chat-welcome"><img src="/radar.svg" width="60" height="60" alt=""><h3>Haberin bir adım ötesine geç.</h3><p>Teknik yenilikleri, arka planı ve pratik etkileri birlikte inceleyelim.</p><span class="welcome-tip" id="welcome-tip">Başlamak için bir haberin “Soru sor” düğmesine dokun.</span></div>
+    <div class="chat-welcome" id="chat-welcome"><h3>Haberin bir adım ötesine geç.</h3><p>Teknik yenilikleri, arka planı ve pratik etkileri birlikte inceleyelim.</p><span class="welcome-tip" id="welcome-tip">Başlamak için bir haberin “Soru sor” düğmesine dokun.</span></div>
     <div id="chat-messages" role="log" aria-live="polite" aria-relevant="additions text" aria-label="Haber sohbeti"></div>
   </div>
   <div class="chat-bottom">

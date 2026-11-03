@@ -1,4 +1,4 @@
-"""Daily Radar digest: durable claim, complete MIME and Proton-compatible SMTP."""
+"""Daily news digest: durable claim, complete MIME and Proton-compatible SMTP."""
 import base64
 import logging
 import smtplib
@@ -9,7 +9,6 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import format_datetime, formataddr, make_msgid
-from importlib.resources import files
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from zoneinfo import ZoneInfo
 
@@ -86,33 +85,23 @@ def _top_stories(session, limit=12, *, now=None, grouping=None):
     return (grouping or group_digest_stories)(stories)[:limit]
 
 
-def _logo_bytes():
-    return files("ai_news_radar").joinpath("assets/radar-logo-web.png").read_bytes()
-
-
 def build_message(stories, now, *, message_id=None, images=None):
     # Use RFC message identifiers (including @domain) for MIME Content-ID values.
     # Normalize cached covers too; every message gets unique matching HTML/MIME IDs.
-    logo_cid = make_msgid(idstring='radar-logo', domain='radar.local')[1:-1]
-    images = {url: replace(cover, cid=make_msgid(idstring='radar-cover', domain='radar.local')[1:-1])
+    images = {url: replace(cover, cid=make_msgid(idstring='news-cover', domain='news.local')[1:-1])
               for url, cover in (images or {}).items()}
     msg = MIMEMultipart("related")
-    msg["Subject"] = f"Radar · Günlük AI Özeti · {_local(now):%d.%m.%Y}"
-    msg["From"] = formataddr(("Radar", EMAIL_FROM))
+    msg["Subject"] = f"Günlük AI Özeti · {_local(now):%d.%m.%Y}"
+    msg["From"] = formataddr(("AI Haberleri", EMAIL_FROM))
     msg["To"] = ", ".join(EMAIL_RECIPIENTS)
     msg["Date"] = format_datetime(now)
-    msg["Message-ID"] = message_id or make_msgid(domain=EMAIL_FROM.rsplit("@", 1)[-1] or "radar.local")
+    msg["Message-ID"] = message_id or make_msgid(domain=EMAIL_FROM.rsplit("@", 1)[-1] or "news.local")
     alternative = MIMEMultipart("alternative")
     label = _local(now).strftime("%d.%m.%Y")
     alternative.attach(MIMEText(render_text(stories, label, timezone=SCAN_TIMEZONE), "plain", "utf-8"))
     html = _render_html(stories, label, timezone=SCAN_TIMEZONE, public_url=EMAIL_PUBLIC_URL, images=images)
-    html = html.replace('cid:radar-logo', 'cid:' + logo_cid)
     alternative.attach(MIMEText(html, "html", "utf-8"))
     msg.attach(alternative)
-    logo = MIMEImage(_logo_bytes(), _subtype="png")
-    logo.add_header("Content-ID", f"<{logo_cid}>")
-    logo.add_header("Content-Disposition", "inline", filename="radar-logo.png")
-    msg.attach(logo)
     for url in dict.fromkeys(story.raw_item.url for story in stories):
         cover = (images or {}).get(url)
         if cover:
@@ -217,7 +206,7 @@ def main():
     from pathlib import Path
     from ai_news_radar.db import get_session, init_db
 
-    parser = argparse.ArgumentParser(description="Radar günlük özet ve Proton SMTP")
+    parser = argparse.ArgumentParser(description="Günlük haber özeti ve Proton SMTP")
     parser.add_argument("--send-now", action="store_true", help="Saati beklemeden gönderir; günlük tekrar korumasını korur")
     parser.add_argument("--preview", type=Path, help="Göndermeden HTML ve .eml önizlemesi kaydeder")
     args = parser.parse_args()

@@ -380,5 +380,5 @@ app.use((error, req, res, next) => {
   res.status(502).render("error", { icon });
 });
 if (require.main === module)
-  app.listen(PORT, () => console.log(`AI News Radar http://localhost:${PORT}`));
+  app.listen(PORT, () => console.log(`AI Haberleri http://localhost:${PORT}`));
 module.exports = { app };

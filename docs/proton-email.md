@@ -1,13 +1,13 @@
-# Radar günlük özeti — Proton / hydroxide
+# Günlük AI özeti — Proton / hydroxide
 
 Günlük saat: **13:00 Europe/Istanbul**. Önizleme gönderim yapmadan hazırlanabilir. Hesap bağlantısı tamamlanmadan `EMAIL_ENABLED` kapalı kalmalıdır.
 
 ## Bülten düzeni
 
 Bülten, web sitesinin açık renk paletini (`frontend/public/styles.css`) kullanır:
-beyaz zemin, antrasit metin (`#17191c`), turkuaz Radar başlığı ve bağlantılar
+beyaz zemin, antrasit metin (`#17191c`), turkuaz bölüm başlıkları ve bağlantılar
 (`#0a7f7c`), şeftali özet alanı (`#fbe1d1`) ve koyu kahverengi özet başlığı
-(`#5d2a1a`). Kompakt logo şeffaf ve turkuazdır. Bölüm girişleri
+(`#5d2a1a`). Bölüm girişleri
 masaüstünde başlık/özet olarak iki sütunludur; telefonda tek sütuna dönüşür.
 Desteklenen kaynaklarda, bülten hazırlanırken haber sayfasının `og:image` veya
 `twitter:image` kapak görseli alınır. YouTube watch/shorts/live/youtu.be bağlantılarında
@@ -50,8 +50,8 @@ Bu revizyon, `Content-Disposition: inline` görsellerini metin parçası sayıp 
 sonra atlar ([upstream #191](https://github.com/emersion/hydroxide/issues/191)).
 `deploy/hydroxide/inline-images.patch` ve `inline_images.go`, Content-ID içeren
 görselleri köprünün şifreli ek yükleyicisine yönlendirir. CID, dosya adı, görsel
-baytları ve özgün inline başlığı korunur; logo ve haber kapakları birlikte düzelir.
-Radar, Proton'un ContentID doğrulaması için her görsele `@radar.local` alanı
+baytları ve özgün inline başlığı korunur; haber kapakları ve kaynak logoları düzelir.
+Uygulama, Proton'un ContentID doğrulaması için her görsele `@news.local` alanı
 içeren benzersiz bir MIME kimliği üretir; HTML'deki CID ile ek başlığı eşleştirilir.
 Köprü, MIME kimliğinin dışındaki `< >` işaretlerini Proton API'sine iletmeden
 çıkarır; API, HTML'deki `cid:` sonrasında kullanılan yalın kimliği bekler.
@@ -84,7 +84,7 @@ docker compose stop hydroxide
 docker compose --profile proton run --rm hydroxide auth your-address@proton.me
 ```
 
-Başarılı girişten sonra verilen **bridge password** Radar'ın SMTP parolasıdır. Proton giriş parolası değildir. Bu değeri yerelde `.env` içine kaydedin:
+Başarılı girişten sonra verilen **bridge password** uygulamanın SMTP parolasıdır. Proton giriş parolası değildir. Bu değeri yerelde `.env` içine kaydedin:
 
 ```dotenv
 EMAIL_ENABLED=true

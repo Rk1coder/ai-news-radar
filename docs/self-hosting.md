@@ -1,4 +1,4 @@
-# Radar: kendi sunucunda PostgreSQL ile çalıştırma
+# AI Haberleri: kendi sunucunda PostgreSQL ile çalıştırma
 
 Docker ve Compose bulunan sürekli açık bir Linux
 sunucuda API, arayüz, zamanlayıcı, PostgreSQL, yedekleyici ve Proton köprüsü çalışır.

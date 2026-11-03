@@ -1,12 +1,9 @@
 {
-  "name": "Radar · AI News Detect & Blog",
-  "short_name": "Radar",
+  "name": "AI Haberleri",
+  "short_name": "AI Haberleri",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0a7f7c",
-  "icons": [
-    { "src": "/radar.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "/radar-favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
-  ]
+  "icons": []
 }

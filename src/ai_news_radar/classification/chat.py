@@ -7,7 +7,7 @@ from ai_news_radar.config import ANTHROPIC_API_KEY, CLASSIFIER_MODEL
 from ai_news_radar.ingestion.base import strip_html
 from ai_news_radar.models import Development
 
-USER_AGENT = "Mozilla/5.0 (compatible; ai-news-radar/0.1)"
+USER_AGENT = "Mozilla/5.0 (compatible; ai-news/0.1)"
 _WHITESPACE_RE = re.compile(r"\s+")
 _SCRIPT_STYLE_RE = re.compile(r"<(script|style)[^>]*>.*?</\1>", re.IGNORECASE | re.DOTALL)
 

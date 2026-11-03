@@ -1,8 +1,8 @@
 {
-  "name": "ai-news-radar-frontend",
+  "name": "ai-news-frontend",
   "version": "0.1.0",
   "private": true,
-  "description": "AI News Radar icin Node/Express frontend - veriyi Python FastAPI JSON API'sinden ceker.",
+  "description": "AI Haberleri icin Node/Express frontend - veriyi Python FastAPI JSON API'sinden ceker.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

@@ -169,7 +169,7 @@ def logo_candidates(html, page_url):
 def _session():
     session = requests.Session()
     session.trust_env = False
-    session.headers.update({'User-Agent': 'Mozilla/5.0 (compatible; ai-news-radar/0.1)',
+    session.headers.update({'User-Agent': 'Mozilla/5.0 (compatible; ai-news/0.1)',
                             'Accept': 'text/html,image/webp,image/jpeg,image/png;q=0.9'})
     return session
 
@@ -181,7 +181,7 @@ def _download_image(session, candidates, deadline, *, kind='cover'):
         try:
             data, _, content_type = fetch_public(session, candidate, limit=DOWNLOAD_LIMIT, deadline=deadline)
             data, subtype = raster_image(data, content_type)
-            cid = 'radar-image-' + sha256(data).hexdigest()[:20]
+            cid = 'news-image-' + sha256(data).hexdigest()[:20]
             # Some publishers (notably arXiv) put their site logo in og:image.
             # Do not describe that generic branding as an article cover.
             filename = urlsplit(candidate).path.rsplit('/', 1)[-1].lower()

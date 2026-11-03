@@ -207,14 +207,11 @@
       row.append(userRow);
       const botRow = element("div", "msg-row bot-row");
       const avatarBot = element("span", "avatar avatar-bot");
-      const logo = document.createElement("img");
-      logo.src = "/radar.svg";
-      logo.alt = "";
-      avatarBot.append(logo);
+      avatarBot.textContent = "AI";
       const botCol = element("div", "bot-col");
       const label = element("div", "answer-label");
       label.append(
-        document.createTextNode("Radar Asistanı"),
+        document.createTextNode("Haber Asistanı"),
         element("span", "msg-time", formatTime(turn.ts)),
       );
       botCol.append(label);

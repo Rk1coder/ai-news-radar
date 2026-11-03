@@ -17,7 +17,7 @@ from ai_news_radar.web.settings_query import (
     update_scan_settings,
 )
 
-app = FastAPI(title="AI News Radar API")
+app = FastAPI(title="AI Haberleri API")
 init_db()
 
 SOURCE_TYPE_LABELS = {

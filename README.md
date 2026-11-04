@@ -4,6 +4,22 @@ Yapay zekâ ve yakın teknoloji haberlerini kaynaklardan toplayan, sınıflandı
 haber bağlamında sohbet sunan uygulama. Python/FastAPI API, PostgreSQL veritabanı
 ve Node/Express/EJS arayüzünden oluşur.
 
+## Ekran görüntüleri
+
+Görüntülerdeki haberler arayüzü göstermek için eklenmiş örnek verilerdir.
+
+| Ana sayfa (açık tema) | Ana sayfa (koyu tema) |
+| --- | --- |
+| ![Ana sayfa, açık tema](docs/screenshots/dashboard-light.jpg) | ![Ana sayfa, koyu tema](docs/screenshots/dashboard-dark.jpg) |
+
+| Haber Asistanı | Ayarlar paneli |
+| --- | --- |
+| ![Haber Asistanı sohbet paneli](docs/screenshots/chat-assistant.jpg) | ![Ayarlar paneli](docs/screenshots/settings-panel.jpg) |
+
+### Günlük e-posta bülteni
+
+![Günlük e-posta bülteni](docs/screenshots/daily-email.jpg)
+
 ## Öne çıkan özellikler
 
 - **Otomatik haber taraması** — arXiv, Hugging Face, GitHub, Reddit, bloglar ve daha

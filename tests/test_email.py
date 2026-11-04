@@ -7,8 +7,8 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from ai_news_radar.models import Base, Development, RawItem, Source
-from ai_news_radar.notifications import email
+from ai_news.models import Base, Development, RawItem, Source
+from ai_news.notifications import email
 
 
 def make_development(title="<script>alert(1)</script> New model"):
@@ -23,9 +23,9 @@ def make_development(title="<script>alert(1)</script> New model"):
 def configured(monkeypatch):
     monkeypatch.setattr(email, "EMAIL_ENABLED", True, raising=False)
     monkeypatch.setattr(email, "EMAIL_SMTP_HOST", "127.0.0.1", raising=False)
-    monkeypatch.setattr(email, "EMAIL_SMTP_USER", "radar@example.com", raising=False)
+    monkeypatch.setattr(email, "EMAIL_SMTP_USER", "news@example.com", raising=False)
     monkeypatch.setattr(email, "EMAIL_SMTP_PASSWORD", "secret", raising=False)
-    monkeypatch.setattr(email, "EMAIL_FROM", "radar@example.com", raising=False)
+    monkeypatch.setattr(email, "EMAIL_FROM", "news@example.com", raising=False)
     monkeypatch.setattr(email, "EMAIL_RECIPIENTS", ("me@example.com",), raising=False)
     monkeypatch.setattr(email, "EMAIL_SEND_HOUR", 8, raising=False)
     monkeypatch.setattr(email, "SCAN_TIMEZONE", "UTC", raising=False)
@@ -130,7 +130,7 @@ def test_hydroxide_local_mode_avoids_starttls_and_uses_bridge_login(configured,m
         assert email.send_daily_digest(session,datetime(2026,10,28,16,tzinfo=UTC))
         relay=smtp.return_value.__enter__.return_value
         relay.starttls.assert_not_called()
-        relay.login.assert_called_once_with('radar@example.com','secret')
+        relay.login.assert_called_once_with('news@example.com','secret')
 
 
 def test_local_mode_refuses_remote_plaintext_credentials(configured,monkeypatch,sessions):

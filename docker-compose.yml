@@ -33,7 +33,7 @@ services:
 
   scheduler:
     build: .
-    command: ["python", "-m", "ai_news_radar.scheduler"]
+    command: ["python", "-m", "ai_news.scheduler"]
     restart: unless-stopped
     environment:
       DATABASE_URL: ${DATABASE_URL}

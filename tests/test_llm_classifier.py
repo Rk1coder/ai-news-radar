@@ -3,14 +3,14 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from ai_news_radar.classification.llm_classifier import ClassificationResult, classify
+from ai_news.classification.llm_classifier import ClassificationResult, classify
 
 
 def mock_anthropic(response_text):
     message = Mock(content=[Mock(text=response_text)])
     client = Mock()
     client.messages.create.return_value = message
-    return patch("ai_news_radar.classification.llm_classifier.Anthropic", return_value=client), client
+    return patch("ai_news.classification.llm_classifier.Anthropic", return_value=client), client
 
 
 def test_classify_sends_title_and_summary_and_parses_response():
@@ -84,7 +84,7 @@ def test_classify_raises_on_missing_required_field():
 def test_classify_propagates_api_errors():
     client = Mock()
     client.messages.create.side_effect = RuntimeError("api down")
-    with patch("ai_news_radar.classification.llm_classifier.Anthropic", return_value=client):
+    with patch("ai_news.classification.llm_classifier.Anthropic", return_value=client):
         with pytest.raises(RuntimeError):
             classify("t", "s")
 

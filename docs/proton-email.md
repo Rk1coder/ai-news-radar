@@ -105,13 +105,13 @@ EMAIL_PUBLIC_URL=
 
 ```bash
 docker compose --profile proton up -d --build hydroxide api scheduler
-docker compose exec -T scheduler python -m ai_news_radar.notifications.email
+docker compose exec -T scheduler python -m ai_news.notifications.email
 ```
 
 Hemen tek günlük özet göndermek için aşağıdaki komut kullanılabilir; saati atlar, aynı günün başarılı kaydını silmez:
 
 ```bash
-docker compose exec -T scheduler python -m ai_news_radar.notifications.email --send-now
+docker compose exec -T scheduler python -m ai_news.notifications.email --send-now
 ```
 
 Saat 13:00'ten sonra ilk etkinleştirme veya yeniden başlatmada, henüz gönderilmediyse o günün özeti ilk uygun döngüde gönderilir. SMTP kabulü gelen kutusuna teslim garantisi değildir; ilk gönderimde Proton Gönderilenler ve alıcının spam klasörü kontrol edilmelidir.

@@ -11,9 +11,9 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: radar
-          POSTGRES_PASSWORD: radar
-          POSTGRES_DB: ai_news_radar
+          POSTGRES_USER: ainews
+          POSTGRES_PASSWORD: ainews
+          POSTGRES_DB: ai_news
         ports:
           - 5432:5432
         options: >-

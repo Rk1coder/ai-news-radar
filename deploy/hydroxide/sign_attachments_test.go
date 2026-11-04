@@ -11,7 +11,7 @@ import (
 )
 
 func TestAttachmentSignatureVerifiesExactImageBytes(t *testing.T) {
-	key, err := openpgp.NewEntity("Radar test", "", "test@example.com", nil)
+	key, err := openpgp.NewEntity("AI Haber test", "", "test@example.com", nil)
 	if err != nil { t.Fatal(err) }
 	data := []byte("\x89PNG\r\n\x1a\nimage payload")
 	att := &protonmail.Attachment{}

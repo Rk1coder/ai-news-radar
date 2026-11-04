@@ -12,9 +12,9 @@ RUN go test ./smtp ./protonmail
 RUN CGO_ENABLED=0 go build -trimpath -o /hydroxide ./cmd/hydroxide
 
 FROM alpine:3.23
-RUN apk add --no-cache ca-certificates && addgroup -g 10001 radar && adduser -D -u 10001 -G radar radar && mkdir -p /data && chown radar:radar /data
+RUN apk add --no-cache ca-certificates && addgroup -g 10001 ainews && adduser -D -u 10001 -G ainews ainews && mkdir -p /data && chown ainews:ainews /data
 COPY --from=build /hydroxide /usr/local/bin/hydroxide
-USER radar
+USER ainews
 ENV XDG_CONFIG_HOME=/data
 ENTRYPOINT ["hydroxide"]
 CMD ["-smtp-host", "0.0.0.0", "smtp"]

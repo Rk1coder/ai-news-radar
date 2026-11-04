@@ -2,8 +2,8 @@ from datetime import datetime
 
 from bs4 import BeautifulSoup
 
-from ai_news_radar.models import Development, RawItem, Source
-from ai_news_radar.notifications.email_template import render_html, render_text
+from ai_news.models import Development, RawItem, Source
+from ai_news.notifications.email_template import render_html, render_text
 
 
 def story(title, *, source="publisher", kind="company", url="https://example.com/news", summary="Kısa açıklama.", tags=()):

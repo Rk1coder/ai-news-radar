@@ -4,10 +4,10 @@ from threading import Event, Thread
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from ai_news_radar.ingestion import active_connectors
-from ai_news_radar.models import AppSettings, Base, CustomSource, ScanRun, SourceToggle
-from ai_news_radar.scans import effective_settings, run_scan, scan_status
-from ai_news_radar.scheduler import latest_slot, next_slot
+from ai_news.ingestion import active_connectors
+from ai_news.models import AppSettings, Base, CustomSource, ScanRun, SourceToggle
+from ai_news.scans import effective_settings, run_scan, scan_status
+from ai_news.scheduler import latest_slot, next_slot
 
 
 def db(tmp_path):
@@ -32,7 +32,7 @@ class BrokenSource(EmptySource):
 
 
 def test_schedule_uses_istanbul_and_catches_only_latest_missed_slot(monkeypatch):
-    monkeypatch.setattr("ai_news_radar.scheduler.SCAN_INTERVAL_MINUTES", 0)
+    monkeypatch.setattr("ai_news.scheduler.SCAN_INTERVAL_MINUTES", 0)
     # 13:30 Istanbul -> 10:00 previous slot, 14:00 next.
     now = datetime(2026, 10, 26, 10, 30, tzinfo=UTC)
     assert latest_slot(now) == datetime(2026, 10, 26, 7, tzinfo=UTC)
@@ -104,7 +104,7 @@ def test_orphaned_scan_is_marked_interrupted_and_can_be_retried(tmp_path):
 
 
 def test_interval_schedule_and_next_run(monkeypatch):
-    import ai_news_radar.scheduler as scheduler
+    import ai_news.scheduler as scheduler
     monkeypatch.setattr(scheduler, 'SCAN_INTERVAL_MINUTES', 15, raising=False)
     now = datetime(2026, 10, 26, 14, 7, tzinfo=UTC)
     assert latest_slot(now) == datetime(2026, 10, 26, 14, 0, tzinfo=UTC)
@@ -135,7 +135,7 @@ def test_active_connectors_excludes_disabled_and_includes_custom(tmp_path):
 
 
 def test_request_scan_returns_while_worker_runs_and_refuses_duplicate(tmp_path):
-    from ai_news_radar.scans import request_scan
+    from ai_news.scans import request_scan
     sessions = db(tmp_path)
     release, entered = Event(), Event()
     class SlowSource(EmptySource):

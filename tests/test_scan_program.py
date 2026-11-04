@@ -8,10 +8,10 @@ from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from ai_news_radar.models import Base
-from ai_news_radar.scans import effective_settings, scan_status
-from ai_news_radar.scheduler import latest_slot, next_slot, slots_near
-from ai_news_radar.web import app as web_app
+from ai_news.models import Base
+from ai_news.scans import effective_settings, scan_status
+from ai_news.scheduler import latest_slot, next_slot, slots_near
+from ai_news.web import app as web_app
 
 
 @pytest.fixture
@@ -24,7 +24,7 @@ def sessions():
 
 @pytest.fixture
 def client(sessions):
-    with patch("ai_news_radar.web.app.get_session", sessions):
+    with patch("ai_news.web.app.get_session", sessions):
         yield TestClient(web_app.app)
 
 
@@ -115,12 +115,12 @@ def test_scan_status_uses_persisted_program_for_next_run(client, sessions):
         @classmethod
         def now(cls, tz=None):
             return cls(2026, 10, 28, 10, 29, tzinfo=UTC)
-    with sessions() as session, patch("ai_news_radar.scans.datetime", FixedDatetime):
+    with sessions() as session, patch("ai_news.scans.datetime", FixedDatetime):
         assert scan_status(session)["next_run_at"] == "2026-10-28T10:30:00+00:00"
 
 
 def test_scheduler_loop_reload_applies_saved_program_on_next_cycle(client, sessions):
-    import ai_news_radar.scheduler as scheduler
+    import ai_news.scheduler as scheduler
     calls = []
     program = {"times": ["13:30"], "windows": []}
     client.put("/api/settings/scan", json={"interval_minutes": 0, "auto_scan_enabled": True, "program": program})
@@ -149,9 +149,9 @@ def test_scheduler_loop_reload_applies_saved_program_on_next_cycle(client, sessi
             pass
     def record_scan(**kwargs):
         calls.append(kwargs["scheduled_for"])
-    with patch("ai_news_radar.db.get_session", sessions), patch("ai_news_radar.db.init_db"), \
+    with patch("ai_news.db.get_session", sessions), patch("ai_news.db.init_db"), \
          patch.object(scheduler, "Event", StopAfterTwoCycles), patch.object(scheduler, "Thread", InlineWorker), \
          patch.object(scheduler, "datetime", FixedDatetime), patch.object(scheduler.signal, "signal"), \
-         patch("ai_news_radar.scans.run_scan", record_scan), patch("ai_news_radar.notifications.telegram.publish_pending"):
+         patch("ai_news.scans.run_scan", record_scan), patch("ai_news.notifications.telegram.publish_pending"):
         scheduler.main()
     assert calls == [datetime(2026, 10, 28, 10, 30, tzinfo=UTC), datetime(2026, 10, 28, 10, 40, tzinfo=UTC)]

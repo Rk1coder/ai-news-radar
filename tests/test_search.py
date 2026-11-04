@@ -1,5 +1,5 @@
-from ai_news_radar.models import Development, RawItem, Source
-from ai_news_radar.search import NewsSearch, normalize
+from ai_news.models import Development, RawItem, Source
+from ai_news.search import NewsSearch, normalize
 
 
 def make_development(title='', summary='', title_tr='', summary_tr='', sector_tags=None, source_name='arxiv'):

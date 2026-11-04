@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-from ai_news_radar.ingestion.rss import RssConnector
+from ai_news.ingestion.rss import RssConnector
 
 SAMPLE_RSS = """<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
@@ -17,7 +17,7 @@ SAMPLE_RSS = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 
-@patch("ai_news_radar.ingestion.rss.requests.get")
+@patch("ai_news.ingestion.rss.requests.get")
 def test_fetch_parses_and_strips_html(mock_get):
     mock_response = MagicMock()
     mock_response.text = SAMPLE_RSS
@@ -37,7 +37,7 @@ def test_fetch_parses_and_strips_html(mock_get):
     assert item.published_at.year == 2025
 
 
-@patch("ai_news_radar.ingestion.rss.requests.get")
+@patch("ai_news.ingestion.rss.requests.get")
 def test_atom_updated_date_is_used_when_published_is_missing(mock_get):
     from datetime import datetime
     mock_get.return_value.text = '''<feed xmlns="http://www.w3.org/2005/Atom"><entry>
@@ -50,8 +50,8 @@ def test_atom_updated_date_is_used_when_published_is_missing(mock_get):
 
 def test_recent_window_sorts_before_limiting_and_excludes_future_and_undated():
     from datetime import datetime, timedelta
-    from ai_news_radar.ingestion.base import FetchedItem
-    from ai_news_radar.ingestion.rss import select_recent
+    from ai_news.ingestion.base import FetchedItem
+    from ai_news.ingestion.rss import select_recent
     now = datetime(2026, 10, 26, 12)
     def item(name, days):
         return FetchedItem(name, name, 'https://example.com/' + name, '',
@@ -65,7 +65,7 @@ def test_recent_window_sorts_before_limiting_and_excludes_future_and_undated():
     assert select_recent([item('unknown', None), item('future', -1)], 5, 4, 1, now=now) == []
 
 
-@patch('ai_news_radar.ingestion.rss.requests.get')
+@patch('ai_news.ingestion.rss.requests.get')
 def test_html_error_page_is_not_a_successful_empty_feed(mock_get):
     import pytest
     mock_get.return_value.text = '<html><title>Access denied</title></html>'
@@ -73,12 +73,12 @@ def test_html_error_page_is_not_a_successful_empty_feed(mock_get):
         RssConnector('blocked', 'https://example.com/feed').fetch()
 
 
-@patch('ai_news_radar.ingestion.rss.requests.get')
+@patch('ai_news.ingestion.rss.requests.get')
 def test_multiple_medium_tags_deduplicate_urls_without_tracking(mock_get):
     first, second = MagicMock(), MagicMock()
     first.text = SAMPLE_RSS.replace('/posts/new-model</link>', '/posts/new-model?source=ai</link>')
     second.text = SAMPLE_RSS.replace('/posts/new-model</link>', '/posts/new-model?source=automation</link>')
     mock_get.side_effect = [first, second]
-    from ai_news_radar.ingestion.rss import MultiRssConnector
+    from ai_news.ingestion.rss import MultiRssConnector
     connector = MultiRssConnector('medium', ['https://example.com/ai', 'https://example.com/automation'])
     assert len(connector.fetch()) == 1

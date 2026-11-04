@@ -2,17 +2,17 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-<meta name="theme-color" content="#ffffff"><title>AI Haberleri · Gelişmeleri keşfet</title>
+<meta name="theme-color" content="#ffffff"><title>AI Haber · Gelişmeleri keşfet</title>
 <link rel="icon" href="data:,">
 <link rel="manifest" href="/manifest.webmanifest">
-<script>try{var t=localStorage.getItem("radar-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>try{var t=localStorage.getItem("ai-news-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
 <script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js")})}</script>
 <link rel="stylesheet" href="/styles.css?v=unbranded-20261103"><script defer src="/chat-state.js"></script><script defer src="/live-feed.js"></script><script defer src="/vendor/gsap.min.js?v=3.15.0"></script><script defer src="/assistant-motion.js?v=unbranded-20261103"></script><script defer src="/app.js?v=unbranded-20261103"></script><script defer src="/settings-motion.js?v=settings-20261028-1"></script><script defer src="/scan-program.js?v=unbranded-20261103"></script><script defer src="/settings.js?v=unbranded-20261103"></script>
 </head>
 <body>
 <a class="skip-link" href="#news-list">Haberlere geç</a>
   <header class="topbar page-topbar" id="page-header">
-    <a class="home-link" href="/" aria-label="AI Haberleri ana sayfa">AI Haberleri</a>
+    <a class="home-link" href="/" aria-label="AI Haber ana sayfa">AI Haber</a>
     <div class="topbar-actions">
       <form action="/refresh" method="post" id="refresh-form"><button class="button subtle refresh" type="submit" aria-label="Haberleri güncelle"><%- icon('arrows-clockwise') %><span>Güncelle</span></button></form>
       <a class="button subtle telegram-link" href="https://t.me/+PLz5p6UnqV03NmFk" target="_blank" rel="noopener noreferrer"><%- icon('telegram-logo') %><span>Telegram</span></a>
@@ -96,7 +96,7 @@
     <% }) %>
   </main>
   <div class="load-more" hidden><p id="visible-count" class="muted"></p><button class="button subtle" id="load-more" type="button">Daha fazla haber <%- icon('caret-down') %></button></div>
-  <footer class="page-footer"><a class="home-link" href="/" aria-label="AI Haberleri ana sayfa">AI Haberleri</a><span>Kaynağı incele. Bağlamı anla.</span></footer>
+  <footer class="page-footer"><a class="home-link" href="/" aria-label="AI Haber ana sayfa">AI Haber</a><span>Kaynağı incele. Bağlamı anla.</span></footer>
 </div>
 <aside class="assistant" id="assistant" aria-labelledby="assistant-title" hidden>
   <header class="assistant-header"><div class="assistant-name"><%- icon('sparkle') %><h2 id="assistant-title">Haber Asistanı</h2></div><button type="button" class="icon-button" id="close-chat" aria-label="Sohbeti kapat"><%- icon('x') %></button></header>

@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from ai_news_radar.classification.digest import generate_weekly_digest
-from ai_news_radar.models import Base, Development, RawItem, Source
+from ai_news.classification.digest import generate_weekly_digest
+from ai_news.models import Base, Development, RawItem, Source
 
 
 def make_session():
@@ -17,7 +17,7 @@ def make_session():
 def test_no_recent_developments_skips_llm_call():
     session = make_session()
 
-    with patch("ai_news_radar.classification.digest.Anthropic") as mock_anthropic:
+    with patch("ai_news.classification.digest.Anthropic") as mock_anthropic:
         content, count = generate_weekly_digest(session)
 
     assert count == 0
@@ -47,7 +47,7 @@ def test_summarizes_recent_verified_developments():
     mock_client.messages.create.return_value = MagicMock(
         content=[MagicMock(text="Bu hafta önemli bir gelişme oldu.")]
     )
-    with patch("ai_news_radar.classification.digest.Anthropic", return_value=mock_client):
+    with patch("ai_news.classification.digest.Anthropic", return_value=mock_client):
         content, count = generate_weekly_digest(session)
 
     assert count == 1

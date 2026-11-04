@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-from ai_news_radar.ingestion.huggingface_papers import HuggingFaceDailyPapersConnector
+from ai_news.ingestion.huggingface_papers import HuggingFaceDailyPapersConnector
 
 SAMPLE_RESPONSE = [
     {
@@ -16,7 +16,7 @@ SAMPLE_RESPONSE = [
 ]
 
 
-@patch("ai_news_radar.ingestion.huggingface_papers.requests.get")
+@patch("ai_news.ingestion.huggingface_papers.requests.get")
 def test_fetch_parses_daily_papers(mock_get):
     mock_response = MagicMock()
     mock_response.json.return_value = SAMPLE_RESPONSE

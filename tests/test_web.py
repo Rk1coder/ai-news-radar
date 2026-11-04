@@ -5,11 +5,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from ai_news_radar.classification.llm_classifier import ClassificationResult
-from ai_news_radar.ingestion.base import FetchedItem
-from ai_news_radar.models import Base, Development, WeeklyDigest
-from ai_news_radar.pipeline import run_pipeline
-from ai_news_radar.web import app as web_app_module
+from ai_news.classification.llm_classifier import ClassificationResult
+from ai_news.ingestion.base import FetchedItem
+from ai_news.models import Base, Development, WeeklyDigest
+from ai_news.pipeline import run_pipeline
+from ai_news.web import app as web_app_module
 
 
 class FakeConnector:
@@ -32,7 +32,7 @@ def seeded_sessionmaker():
     Base.metadata.create_all(engine)
     SessionLocal = sessionmaker(bind=engine)
     session = SessionLocal()
-    with patch("ai_news_radar.pipeline.classify") as mock_classify:
+    with patch("ai_news.pipeline.classify") as mock_classify:
         mock_classify.return_value = ClassificationResult(
             technical_impact_score=70, hype_score=40, applicability_score=60,
             sector_tags=["defense"], rationale="test",
@@ -46,7 +46,7 @@ def seeded_sessionmaker():
 
 def test_api_returns_developments():
     SessionLocal = seeded_sessionmaker()
-    with patch("ai_news_radar.web.app.get_session", SessionLocal):
+    with patch("ai_news.web.app.get_session", SessionLocal):
         client = TestClient(web_app_module.app)
         response = client.get("/api/developments")
 
@@ -59,7 +59,7 @@ def test_api_returns_developments():
 
 def test_api_sector_filter_excludes_non_matching():
     SessionLocal = seeded_sessionmaker()
-    with patch("ai_news_radar.web.app.get_session", SessionLocal):
+    with patch("ai_news.web.app.get_session", SessionLocal):
         client = TestClient(web_app_module.app)
         response = client.get("/api/developments", params={"sector": "healthcare"})
 
@@ -72,7 +72,7 @@ def test_search_finds_visible_translated_title_and_preserves_filters():
     with SessionLocal() as session:
         session.query(Development).first().title_tr = "Dünya Modellerini Eğitmek"
         session.commit()
-    with patch("ai_news_radar.web.app.get_session", SessionLocal):
+    with patch("ai_news.web.app.get_session", SessionLocal):
         client = TestClient(web_app_module.app)
         response = client.get("/api/developments", params={"q": "Dünya Modellerini"})
         assert len(response.json()["developments"]) == 1
@@ -83,7 +83,7 @@ def test_search_finds_visible_translated_title_and_preserves_filters():
 def test_today_filter_uses_istanbul_midnight_and_recent_default():
     from datetime import UTC, datetime, timedelta
     from zoneinfo import ZoneInfo
-    from ai_news_radar.models import RawItem, Source
+    from ai_news.models import RawItem, Source
 
     sessions = seeded_sessionmaker()
     midnight = datetime.now(ZoneInfo("Europe/Istanbul")).replace(hour=0, minute=0, second=0, microsecond=0).astimezone(UTC).replace(tzinfo=None)
@@ -96,7 +96,7 @@ def test_today_filter_uses_istanbul_midnight_and_recent_default():
             session.flush()
             session.add(Development(raw_item_id=raw.id, verified=True, priority_score=1))
         session.commit()
-    with patch("ai_news_radar.web.app.get_session", sessions):
+    with patch("ai_news.web.app.get_session", sessions):
         client = TestClient(web_app_module.app)
         body = client.get("/api/developments?period=today").json()
         assert [d["raw_item"]["title"] for d in body["developments"]] == ["newest", "first"]
@@ -109,8 +109,8 @@ def test_feed_read_does_not_generate_missing_digest_or_contact_sources():
     with sessions() as session:
         session.query(WeeklyDigest).delete()
         session.commit()
-    with patch("ai_news_radar.web.app.get_session", sessions), patch(
-        "ai_news_radar.classification.digest.generate_weekly_digest", side_effect=AssertionError("GET must be read-only")
+    with patch("ai_news.web.app.get_session", sessions), patch(
+        "ai_news.classification.digest.generate_weekly_digest", side_effect=AssertionError("GET must be read-only")
     ):
         body = TestClient(web_app_module.app).get("/api/developments").json()
         assert body["weekly_digest"] is None
@@ -118,14 +118,14 @@ def test_feed_read_does_not_generate_missing_digest_or_contact_sources():
 
 
 def test_manual_refresh_reports_busy_instead_of_starting_duplicate():
-    with patch("ai_news_radar.web.app.request_scan", return_value=None):
+    with patch("ai_news.web.app.request_scan", return_value=None):
         response = TestClient(web_app_module.app).post("/api/refresh")
         assert response.status_code == 409
 
 
 def search_sessions():
     from datetime import datetime, timedelta, UTC
-    from ai_news_radar.models import RawItem, Source
+    from ai_news.models import RawItem, Source
     sessions = seeded_sessionmaker()
     with sessions() as session:
         session.query(Development).delete()
@@ -151,7 +151,7 @@ def search_sessions():
 
 def test_topic_search_finds_related_summaries_in_both_languages():
     sessions = search_sessions()
-    with patch('ai_news_radar.web.app.get_session', sessions):
+    with patch('ai_news.web.app.get_session', sessions):
         client = TestClient(web_app_module.app)
         for term in ['bilgisayarlı görü', 'BİLGİSAYARLI GÖRÜ', 'bilgisayarli goru', 'computer vision', 'görüntü işleme']:
             body = client.get('/api/developments', params={'q': term, 'period': 'all'}).json()
@@ -162,7 +162,7 @@ def test_topic_search_finds_related_summaries_in_both_languages():
 
 def test_search_requires_all_concepts_and_keeps_filters():
     sessions = search_sessions()
-    with patch('ai_news_radar.web.app.get_session', sessions):
+    with patch('ai_news.web.app.get_session', sessions):
         client = TestClient(web_app_module.app)
         def results(**params):
             return client.get('/api/developments', params={'q': 'bilgisayarlı görü', 'period': 'all', **params}).json()['developments']
@@ -178,7 +178,7 @@ def test_search_requires_all_concepts_and_keeps_filters():
 
 def test_search_explains_archive_matches_without_changing_date_filter():
     sessions = search_sessions()
-    with patch('ai_news_radar.web.app.get_session', sessions):
+    with patch('ai_news.web.app.get_session', sessions):
         client = TestClient(web_app_module.app)
         body = client.get('/api/developments', params={'q': 'bilgisayarlı görü', 'sector': 'healthcare', 'period': 'today'}).json()
         assert body['developments'] == []
@@ -190,10 +190,10 @@ def test_search_explains_archive_matches_without_changing_date_filter():
 def test_search_ranks_title_matches_first_but_respects_explicit_sort():
     sessions = search_sessions()
     with sessions() as session:
-        from ai_news_radar.models import RawItem
+        from ai_news.models import RawItem
         session.query(RawItem).filter_by(external_id='summary').one().title = 'Computer vision toolkit'
         session.commit()
-    with patch('ai_news_radar.web.app.get_session', sessions):
+    with patch('ai_news.web.app.get_session', sessions):
         client = TestClient(web_app_module.app)
         params = {'q': 'computer vision', 'period': 'all'}
         assert client.get('/api/developments', params=params).json()['developments'][0]['raw_item']['title'] == 'Computer vision toolkit'
@@ -210,7 +210,7 @@ def test_every_displayed_turkish_sector_can_be_searched_without_title_match():
         'government': 'Kamu', 'healthcare': 'Sağlık', 'manufacturing': 'Üretim',
         'marketing': 'Pazarlama', 'robotics': 'Robotik', 'nlp': 'Dil işleme',
     }
-    with patch('ai_news_radar.web.app.get_session', sessions):
+    with patch('ai_news.web.app.get_session', sessions):
         client = TestClient(web_app_module.app)
         for tag, label in labels.items():
             with sessions() as session:
@@ -222,7 +222,7 @@ def test_every_displayed_turkish_sector_can_be_searched_without_title_match():
 
 def test_default_feed_includes_latest_news_even_when_no_publications_today():
     sessions = search_sessions()
-    with patch('ai_news_radar.web.app.get_session', sessions):
+    with patch('ai_news.web.app.get_session', sessions):
         client = TestClient(web_app_module.app)
         body = client.get('/api/developments').json()
         assert len(body['developments']) == 5
@@ -238,7 +238,7 @@ def empty_sessionmaker():
 
 def test_settings_scan_update_round_trips():
     sessions = empty_sessionmaker()
-    with patch("ai_news_radar.web.app.get_session", sessions):
+    with patch("ai_news.web.app.get_session", sessions):
         client = TestClient(web_app_module.app)
         before = client.get("/api/settings").json()
         assert before["scan"]["interval_minutes"] == 15
@@ -252,7 +252,7 @@ def test_settings_scan_update_round_trips():
 
 def test_settings_source_toggle_round_trips():
     sessions = empty_sessionmaker()
-    with patch("ai_news_radar.web.app.get_session", sessions):
+    with patch("ai_news.web.app.get_session", sessions):
         client = TestClient(web_app_module.app)
         names = {s["name"] for s in client.get("/api/settings").json()["sources"]}
         name = next(iter(names))
@@ -265,7 +265,7 @@ def test_settings_source_toggle_round_trips():
 
 def test_settings_custom_source_add_and_remove_round_trips():
     sessions = empty_sessionmaker()
-    with patch("ai_news_radar.web.app.get_session", sessions):
+    with patch("ai_news.web.app.get_session", sessions):
         client = TestClient(web_app_module.app)
         created = client.post(
             "/api/settings/sources/custom",

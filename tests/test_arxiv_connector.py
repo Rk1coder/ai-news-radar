@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-from ai_news_radar.ingestion.arxiv import ArxivConnector
+from ai_news.ingestion.arxiv import ArxivConnector
 
 SAMPLE_FEED = """<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
@@ -16,7 +16,7 @@ SAMPLE_FEED = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 
-@patch("ai_news_radar.ingestion.arxiv.requests.get")
+@patch("ai_news.ingestion.arxiv.requests.get")
 def test_fetch_parses_entries(mock_get):
     mock_response = MagicMock()
     mock_response.text = SAMPLE_FEED

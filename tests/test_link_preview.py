@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import requests
 
-from ai_news_radar.web.link_preview import extract_og_meta, fetch_link_preview
+from ai_news.web.link_preview import extract_og_meta, fetch_link_preview
 
 SAMPLE_HTML = """
 <html><head>
@@ -20,13 +20,13 @@ def test_extract_og_meta_handles_both_attribute_orders():
     assert meta["description"] == "Yedek aciklama"
 
 
-@patch("ai_news_radar.web.link_preview.requests.get")
+@patch("ai_news.web.link_preview.requests.get")
 def test_fetch_link_preview_returns_empty_on_failure(mock_get):
     mock_get.side_effect = requests.ConnectionError("network down")
     assert fetch_link_preview("https://example.com") == {}
 
 
-@patch("ai_news_radar.web.link_preview.requests.get")
+@patch("ai_news.web.link_preview.requests.get")
 def test_fetch_link_preview_parses_response(mock_get):
     mock_response = MagicMock()
     mock_response.text = SAMPLE_HTML

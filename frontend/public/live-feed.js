@@ -1,7 +1,7 @@
 (function (root, factory) {
   const api = factory();
   if (typeof module === "object" && module.exports) module.exports = api;
-  else root.RadarLiveFeed = api;
+  else root.AINewsLiveFeed = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
   class FeedPoller {

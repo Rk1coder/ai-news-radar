@@ -4,12 +4,12 @@ umask 077
 
 backup_once() {
   stamp=$(date -u +%Y%m%dT%H%M%SZ)
-  temporary="/backups/radar-$stamp.dump.partial"
+  temporary="/backups/ai-news-$stamp.dump.partial"
   if pg_dump --format=custom --no-owner --no-acl --file="$temporary"; then
-    mv "$temporary" "/backups/radar-$stamp.dump"
+    mv "$temporary" "/backups/ai-news-$stamp.dump"
     # Retain one week; prune only after a successful new backup.
-    find /backups -name 'radar-*.dump' -type f -mtime +7 -exec rm -f {} \;
-    printf 'Backup saved: radar-%s.dump\n' "$stamp"
+    find /backups -name 'ai-news-*.dump' -type f -mtime +7 -exec rm -f {} \;
+    printf 'Backup saved: ai-news-%s.dump\n' "$stamp"
     return 0
   fi
   rm -f "$temporary"

@@ -8,7 +8,7 @@
       return [String(d.id), d];
     }),
   );
-  const cacheKey = "radar-conversations-v1";
+  const cacheKey = "ai-news-conversations-v1";
   let cached;
   try {
     cached = sessionStorage.getItem(cacheKey);
@@ -477,11 +477,11 @@
       .querySelectorAll(".original")
       .forEach((el) => (el.hidden = !e.target.checked));
     try {
-      sessionStorage.setItem("radar-original", String(e.target.checked));
+      sessionStorage.setItem("ai-news-original", String(e.target.checked));
     } catch (_) {}
   });
   try {
-    if (sessionStorage.getItem("radar-original") === "true") {
+    if (sessionStorage.getItem("ai-news-original") === "true") {
       $("orig-toggle").checked = true;
       document
         .querySelectorAll(".original")
@@ -531,7 +531,7 @@
     );
   }
   updateScanButton();
-  const poller = new RadarLiveFeed.FeedPoller({
+  const poller = new AINewsLiveFeed.FeedPoller({
     enabled: () => !document.hidden && navigator.onLine,
     load: async () => {
       const response = await fetch(location.pathname + location.search, {
@@ -558,7 +558,7 @@
             )
           : null;
       const top = anchor?.getBoundingClientRect().top;
-      const result = RadarLiveFeed.mergeNews(document, fresh, bindStory);
+      const result = AINewsLiveFeed.mergeNews(document, fresh, bindStory);
       stories = result.stories;
       visibleCount += result.added;
       stories.forEach((el) => {

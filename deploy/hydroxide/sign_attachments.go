@@ -10,7 +10,7 @@ import (
 )
 
 // The Proton API requires a detached signature of the unencrypted attachment.
-// Radar bounds image payloads before SMTP; prepare the signature before upload.
+// AI Haber bounds image payloads before SMTP; prepare the signature before upload.
 func signOutgoingAttachment(att *protonmail.Attachment, body io.Reader, signer *openpgp.Entity) (io.Reader, error) {
 	data, err := io.ReadAll(body)
 	if err != nil { return nil, err }

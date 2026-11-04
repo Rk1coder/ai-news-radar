@@ -3,10 +3,10 @@ from unittest.mock import patch
 
 import pytest
 
-from ai_news_radar.models import Development, RawItem, Source
-from ai_news_radar.notifications import email
-from ai_news_radar.notifications.email_grouping import group_digest_stories
-from ai_news_radar.notifications.email_template import render_html, render_text
+from ai_news.models import Development, RawItem, Source
+from ai_news.notifications import email
+from ai_news.notifications.email_grouping import group_digest_stories
+from ai_news.notifications.email_template import render_html, render_text
 
 
 def article(index, title, source='publisher', summary='', title_tr=''):
@@ -100,7 +100,7 @@ def test_digest_limit_applies_after_grouping_and_keeps_later_related_sources(ses
 def sessions(tmp_path):
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
-    from ai_news_radar.models import Base
+    from ai_news.models import Base
     engine=create_engine(f'sqlite:///{tmp_path / "grouping.db"}')
     Base.metadata.create_all(engine)
     yield sessionmaker(bind=engine)

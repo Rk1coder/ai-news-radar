@@ -9,12 +9,12 @@ import (
 )
 
 func TestInlineImagesReachAttachmentUploader(t *testing.T) {
-	// The same related/alternative structure used by Radar's Python sender.
+	// The same related/alternative structure used by the Python sender.
 	fixture := "MIME-Version: 1.0\r\nContent-Type: multipart/related; boundary=outer\r\n\r\n" +
 		"--outer\r\nContent-Type: multipart/alternative; boundary=inner\r\n\r\n" +
-		"--inner\r\nContent-Type: text/plain\r\n\r\nRadar\r\n" +
-		"--inner\r\nContent-Type: text/html\r\n\r\n<img src=\"cid:radar-logo\"><img src=\"cid:cover\">\r\n--inner--\r\n" +
-		"--outer\r\nContent-Type: image/png\r\nContent-Disposition: inline; filename=radar-logo.png\r\nContent-ID: <radar-logo>\r\nContent-Transfer-Encoding: base64\r\n\r\nbG9nby1ieXRlcw==\r\n" +
+		"--inner\r\nContent-Type: text/plain\r\n\r\nAI Haber\r\n" +
+		"--inner\r\nContent-Type: text/html\r\n\r\n<img src=\"cid:logo\"><img src=\"cid:cover\">\r\n--inner--\r\n" +
+		"--outer\r\nContent-Type: image/png\r\nContent-Disposition: inline; filename=logo.png\r\nContent-ID: <logo>\r\nContent-Transfer-Encoding: base64\r\n\r\nbG9nby1ieXRlcw==\r\n" +
 		"--outer\r\nContent-Type: image/jpeg\r\nContent-Disposition: inline; filename=cover.jpeg\r\nContent-ID: <cover>\r\nContent-Transfer-Encoding: base64\r\n\r\nY292ZXItYnl0ZXM=\r\n--outer--\r\n"
 	r, err := mail.CreateReader(strings.NewReader(fixture))
 	if err != nil { t.Fatal(err) }
@@ -39,7 +39,7 @@ func TestInlineImagesReachAttachmentUploader(t *testing.T) {
 			if filename, _ := h.Filename(); filename == "" { t.Fatal("filename lost") }
 		}
 	}
-	if bodyParts != 2 || len(attachments) != 2 || attachments["<radar-logo>"] != "logo-bytes" || attachments["<cover>"] != "cover-bytes" {
+	if bodyParts != 2 || len(attachments) != 2 || attachments["<logo>"] != "logo-bytes" || attachments["<cover>"] != "cover-bytes" {
 		t.Fatalf("body parts=%d, images=%v", bodyParts, attachments)
 	}
 }
@@ -56,8 +56,8 @@ func TestNormalAttachmentRemainsUnchanged(t *testing.T) {
 }
 
 func TestProtonContentIDMatchesHTMLReference(t *testing.T) {
-	for _, value := range []string{"<logo@radar.local>", "logo@radar.local", " <logo@radar.local> "} {
-		if got := protonContentID(value); got != "logo@radar.local" {
+	for _, value := range []string{"<logo@ai-news.local>", "logo@ai-news.local", " <logo@ai-news.local> "} {
+		if got := protonContentID(value); got != "logo@ai-news.local" {
 			t.Fatalf("API ContentID = %q", got)
 		}
 	}

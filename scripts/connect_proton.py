@@ -90,8 +90,8 @@ print('Proton SMTP bağlantısı doğrulandı.')
     if args.send_test:
         print(f'Tek günlük özet denemesi gönderiliyor: {recipient}')
         send = '''import sys
-from ai_news_radar.db import get_session,init_db
-from ai_news_radar.notifications.email import send_daily_digest
+from ai_news.db import get_session,init_db
+from ai_news.notifications.email import send_daily_digest
 init_db()
 with get_session() as session:
     sent=send_daily_digest(session,force=True)

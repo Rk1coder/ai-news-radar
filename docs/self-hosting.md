@@ -1,4 +1,4 @@
-# AI Haberleri: kendi sunucunda PostgreSQL ile çalıştırma
+# AI Haber: kendi sunucunda PostgreSQL ile çalıştırma
 
 Docker ve Compose bulunan sürekli açık bir Linux
 sunucuda API, arayüz, zamanlayıcı, PostgreSQL, yedekleyici ve Proton köprüsü çalışır.
@@ -68,10 +68,10 @@ docker compose logs --tail=20 db-backup
 Geri yükleme kontrolü mevcut veritabanına dokunmadan ayrı bir veritabanında yapılır:
 
 ```bash
-docker compose exec -T postgres createdb -U radar radar_restore_check
-docker compose exec -T postgres pg_restore -U radar -d radar_restore_check --no-owner --no-acl --exit-on-error < backups/YEDEK.dump
-docker compose exec -T postgres psql -U radar -d radar_restore_check -c 'SELECT count(*) FROM developments;'
-docker compose exec -T postgres dropdb -U radar radar_restore_check
+docker compose exec -T postgres createdb -U ainews ainews_restore_check
+docker compose exec -T postgres pg_restore -U ainews -d ainews_restore_check --no-owner --no-acl --exit-on-error < backups/YEDEK.dump
+docker compose exec -T postgres psql -U ainews -d ainews_restore_check -c 'SELECT count(*) FROM developments;'
+docker compose exec -T postgres dropdb -U ainews ainews_restore_check
 ```
 
 Yeni sunucuya geçişte kod, gizli `.env`, veritabanı yedeği ve Proton oturumu gerekir.

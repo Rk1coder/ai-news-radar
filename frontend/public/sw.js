@@ -1,6 +1,6 @@
 // shortcut: cache-first for a fixed static asset list; no versioned cache busting beyond CACHE_NAME —
 // bump CACHE_NAME when any cached file's content changes meaningfully.
-const CACHE_NAME = "ai-news-static-v7";
+const CACHE_NAME = "ai-news-static-v8";
 const ASSETS = [
   "/styles.css",
   "/app.js",

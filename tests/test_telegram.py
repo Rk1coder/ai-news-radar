@@ -6,8 +6,8 @@ import requests
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from ai_news_radar.models import Base, Development, RawItem, Source
-from ai_news_radar.notifications import telegram
+from ai_news.models import Base, Development, RawItem, Source
+from ai_news.notifications import telegram
 
 
 def make_development():
@@ -46,7 +46,7 @@ def queued(sessions):
 
 
 def delivery(sessions):
-    from ai_news_radar.models import TelegramDelivery
+    from ai_news.models import TelegramDelivery
     with sessions() as session:
         return session.query(TelegramDelivery).one()
 
@@ -70,7 +70,7 @@ def test_message_is_short_translated_plain_text_with_original_link():
 
 
 def test_queue_is_opt_in_verified_only_and_transactional(sessions, configured, monkeypatch):
-    from ai_news_radar.models import TelegramDelivery
+    from ai_news.models import TelegramDelivery
     with sessions() as session:
         dev = make_development()
         session.add(dev)
@@ -125,7 +125,7 @@ def test_uncertain_timeout_is_not_automatically_repeated_or_logged_with_secret(s
 
 
 def test_crashed_inflight_and_old_destination_are_not_resent(sessions, configured, monkeypatch):
-    from ai_news_radar.models import TelegramDelivery
+    from ai_news.models import TelegramDelivery
     queued(sessions)
     monkeypatch.setattr(telegram, 'TELEGRAM_CHAT_ID', '-100456')
     assert telegram.publish_pending(sessions) == 'idle'
@@ -148,10 +148,10 @@ def test_api_false_is_not_success_even_with_http_200(sessions, configured):
 
 
 def test_pipeline_queues_new_articles_but_never_backfills_existing_archive(sessions, configured):
-    from ai_news_radar.models import TelegramDelivery
-    from ai_news_radar.pipeline import run_pipeline
-    from ai_news_radar.ingestion.base import FetchedItem
-    from ai_news_radar.classification.llm_classifier import ClassificationResult
+    from ai_news.models import TelegramDelivery
+    from ai_news.pipeline import run_pipeline
+    from ai_news.ingestion.base import FetchedItem
+    from ai_news.classification.llm_classifier import ClassificationResult
     class Connector:
         source_name = 'example-company'
         source_type = 'company'
@@ -160,7 +160,7 @@ def test_pipeline_queues_new_articles_but_never_backfills_existing_archive(sessi
     with sessions() as session:
         session.add(make_development())
         session.commit()
-        with patch('ai_news_radar.pipeline.classify', return_value=ClassificationResult(
+        with patch('ai_news.pipeline.classify', return_value=ClassificationResult(
             technical_impact_score=70, hype_score=40, applicability_score=60, sector_tags=['healthcare'], rationale='test'
         )):
             run_pipeline(session, [Connector()])
@@ -172,7 +172,7 @@ def test_pipeline_queues_new_articles_but_never_backfills_existing_archive(sessi
 
 
 def test_scheduler_delivers_when_scanning_disabled_and_after_scan_failure(monkeypatch):
-    from ai_news_radar import scheduler, scans
+    from ai_news import scheduler, scans
     calls = []
     monkeypatch.setattr(telegram, 'publish_pending', lambda: calls.append('deliver'))
     monkeypatch.setattr(scheduler, 'AUTO_SCAN_ENABLED', False)
@@ -190,7 +190,7 @@ def test_scheduler_delivers_when_scanning_disabled_and_after_scan_failure(monkey
 
 
 def test_sender_uses_scan_lock_before_network_io(sessions, configured):
-    from ai_news_radar.scans import scan_lock
+    from ai_news.scans import scan_lock
     queued(sessions)
     with sessions() as session:
         with scan_lock(session.get_bind()) as acquired:

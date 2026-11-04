@@ -17,7 +17,7 @@ def configure(path: Path):
     password = values.get('POSTGRES_PASSWORD') or secrets.token_hex(32)
     settings = {
         'POSTGRES_PASSWORD': password,
-        'DATABASE_URL': f'postgresql+psycopg2://radar:{quote(password, safe="")}@postgres:5432/radar',
+        'DATABASE_URL': f'postgresql+psycopg2://ainews:{quote(password, safe="")}@postgres:5432/ainews',
         'COMPOSE_FILE': 'docker-compose.yml:docker-compose.local.yml',
     }
     if previous and urlsplit(previous).hostname != 'postgres':

@@ -1,4 +1,4 @@
-# AI Haberleri
+# AI Haber
 
 Yapay zekâ ve yakın teknoloji haberlerini kaynaklardan toplayan, sınıflandıran ve
 haber bağlamında sohbet sunan uygulama. Python/FastAPI API, PostgreSQL veritabanı
@@ -141,10 +141,10 @@ bağlantı bekleniyor olarak görünür. Tarama günlüğü `scan_runs` tablosun
 python3 -m venv .venv
 .venv/bin/pip install -e '.[dev]'
 npm --prefix frontend install
-.venv/bin/uvicorn ai_news_radar.web.app:app --reload --port 8008
+.venv/bin/uvicorn ai_news.web.app:app --reload --port 8008
 npm --prefix frontend run dev
 # Otomatik tarama için ayrı terminal:
-.venv/bin/python -m ai_news_radar.scheduler
+.venv/bin/python -m ai_news.scheduler
 ```
 
 Docker scheduler zaten çalışıyorsa geliştirmede ikinci bir scheduler gerekmez.
@@ -175,7 +175,7 @@ Arama kutusu Türkçe ve orijinal başlık/özetleri, sektör etiketlerini ve ka
 
 Önerilen sıralama, arama varken ilgi düzeyini; boş aramada yayın tarihini kullanır. Tarih, kaynak, sektör, öncelik ve teyit filtreleri korunur. Seçili tarihte sonuç bulunmazsa aynı diğer filtrelerle arşivdeki eşleşme sayısı ve aramayı koruyan bağlantı gösterilir.
 
-Bu özellik mevcut kayıtlar üzerinde çalışan bir konu sözlüğü ve metin aramasıdır; sınırsız anlamsal arama, serbest soru yanıtlama veya yazım hatası düzeltme değildir. Yeni konu karşılıkları `src/ai_news_radar/search.py` içindeki `TOPICS` sözlüğüne eklenebilir. Arşiv büyüdüğünde arama indeksine geçiş değerlendirilmelidir. Haber Asistanı halen seçili haberin bağlamında yanıt verir.
+Bu özellik mevcut kayıtlar üzerinde çalışan bir konu sözlüğü ve metin aramasıdır; sınırsız anlamsal arama, serbest soru yanıtlama veya yazım hatası düzeltme değildir. Yeni konu karşılıkları `src/ai_news/search.py` içindeki `TOPICS` sözlüğüne eklenebilir. Arşiv büyüdüğünde arama indeksine geçiş değerlendirilmelidir. Haber Asistanı halen seçili haberin bağlamında yanıt verir.
 
 
 ## Telegram kanal/grup akışı
@@ -214,11 +214,11 @@ EMAIL_PUBLIC_URL=https://your-news-domain.example
 Ayarladıktan sonra `docker compose up -d --build api scheduler` çalıştırın. Gönderim durumu ve saati beklemeden hemen test etmek için:
 
 ```bash
-docker compose exec -T scheduler python -m ai_news_radar.notifications.email             # durum
-docker compose exec -T scheduler python -m ai_news_radar.notifications.email --send-now   # hemen gönder
+docker compose exec -T scheduler python -m ai_news.notifications.email             # durum
+docker compose exec -T scheduler python -m ai_news.notifications.email --send-now   # hemen gönder
 ```
 
-`--send-now` yalnızca saat kontrolünü atlar; günlük geçmişi silmez. Önizleme için `python -m ai_news_radar.notifications.email --preview outputs/daily-email.html` kullanın; bu komut e-posta göndermez.
+`--send-now` yalnızca saat kontrolünü atlar; günlük geçmişi silmez. Önizleme için `python -m ai_news.notifications.email --preview outputs/daily-email.html` kullanın; bu komut e-posta göndermez.
 
 `email_digest_attempts` tablosu SMTP'den önce günlük gönderimi atomik olarak sahiplenir. Açıkça reddedilen gönderimler 5 dakika sonra tekrar denenir; SMTP kabul ettikten sonra bağlantının sonucu belirsizse otomatik tekrar durur. `sending`/`uncertain` durumunda Proton Gönderilenler klasörü kontrol edilmelidir. SMTP uçtan uca tam-bir-kez teslim garantisi vermez. `email_digest_log` yalnızca SMTP'nin kabul ettiği gönderimi kaydeder; alıcının gelen kutusuna ulaştığını doğrulamaz.
 
@@ -262,4 +262,4 @@ değişirse hata tarama günlüğünde görünür; erişim engeli veya HTML hata
 RSS taraması sayılmaz. Genel Medium ve Reddit kayıtları sosyal kaynak olarak
 `pending_cross_verification` durumunda tutulur; arayüzde **Teyit bekleyenleri göster** ile açılır.
 
-Kaynak tanımları: `src/ai_news_radar/ingestion/__init__.py`.
+Kaynak tanımları: `src/ai_news/ingestion/__init__.py`.

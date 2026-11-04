@@ -156,7 +156,7 @@
 
   function currentThemePref() {
     try {
-      const t = localStorage.getItem("radar-theme");
+      const t = localStorage.getItem("ai-news-theme");
       return t === "light" || t === "dark" ? t : "system";
     } catch {
       return "system";
@@ -166,7 +166,7 @@
     if (pref === "light" || pref === "dark") document.documentElement.dataset.theme = pref;
     else delete document.documentElement.dataset.theme;
     try {
-      localStorage.setItem("radar-theme", pref);
+      localStorage.setItem("ai-news-theme", pref);
     } catch {
       /* theme still applies for this page load */
     }

@@ -1,5 +1,5 @@
-from ai_news_radar.models import RawItem, Source
-from ai_news_radar.verification.rules import verify
+from ai_news.models import RawItem, Source
+from ai_news.verification.rules import verify
 
 
 def test_academic_source_verified_without_cross_check():

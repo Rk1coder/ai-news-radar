@@ -4,9 +4,9 @@ from unittest.mock import Mock, patch
 import pytest
 from bs4 import BeautifulSoup
 
-from ai_news_radar.notifications import email_images as images
-from ai_news_radar.notifications.email import build_message, preview_html
-from ai_news_radar.notifications.email_template import render_html
+from ai_news.notifications import email_images as images
+from ai_news.notifications.email import build_message, preview_html
+from ai_news.notifications.email_template import render_html
 
 
 def story(url='https://blogs.nvidia.com/blog/article/'):

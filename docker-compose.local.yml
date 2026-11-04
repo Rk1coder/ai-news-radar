@@ -4,14 +4,14 @@ services:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: radar
-      POSTGRES_DB: radar
+      POSTGRES_USER: ainews
+      POSTGRES_DB: ainews
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run scripts/setup_local_db.py first}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     # Database has no published port; only the private Compose network can reach it.
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U radar -d radar"]
+      test: ["CMD-SHELL", "pg_isready -U ainews -d ainews"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -32,12 +32,12 @@ services:
     restart: unless-stopped
     environment:
       PGHOST: postgres
-      PGUSER: radar
-      PGDATABASE: radar
+      PGUSER: ainews
+      PGDATABASE: ainews
       PGPASSWORD: ${POSTGRES_PASSWORD:?Run scripts/setup_local_db.py first}
-    entrypoint: ["/bin/sh", "/opt/radar/backup-loop.sh"]
+    entrypoint: ["/bin/sh", "/opt/ai-news/backup-loop.sh"]
     volumes:
-      - ./deploy/postgres/backup-loop.sh:/opt/radar/backup-loop.sh:ro
+      - ./deploy/postgres/backup-loop.sh:/opt/ai-news/backup-loop.sh:ro
       - postgres-backups:/backups
     depends_on:
       api:

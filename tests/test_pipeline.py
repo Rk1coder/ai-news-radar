@@ -4,10 +4,10 @@ from unittest.mock import patch
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from ai_news_radar.classification.llm_classifier import ClassificationResult
-from ai_news_radar.ingestion.base import FetchedItem
-from ai_news_radar.models import Base
-from ai_news_radar.pipeline import run_pipeline
+from ai_news.classification.llm_classifier import ClassificationResult
+from ai_news.ingestion.base import FetchedItem
+from ai_news.models import Base
+from ai_news.pipeline import run_pipeline
 
 
 class FakeAcademicConnector:
@@ -48,7 +48,7 @@ def make_session():
     return sessionmaker(bind=engine)()
 
 
-@patch("ai_news_radar.pipeline.classify")
+@patch("ai_news.pipeline.classify")
 def test_academic_item_gets_classified(mock_classify):
     mock_classify.return_value = ClassificationResult(
         technical_impact_score=80,
@@ -68,7 +68,7 @@ def test_academic_item_gets_classified(mock_classify):
     mock_classify.assert_called_once()
 
 
-@patch("ai_news_radar.pipeline.classify")
+@patch("ai_news.pipeline.classify")
 def test_social_item_is_not_classified_without_cross_verification(mock_classify):
     session = make_session()
 
@@ -81,7 +81,7 @@ def test_social_item_is_not_classified_without_cross_verification(mock_classify)
     mock_classify.assert_not_called()
 
 
-@patch("ai_news_radar.pipeline.classify")
+@patch("ai_news.pipeline.classify")
 def test_rerunning_pipeline_does_not_duplicate_raw_items(mock_classify):
     mock_classify.return_value = ClassificationResult(
         technical_impact_score=50, hype_score=50, applicability_score=50,
@@ -97,7 +97,7 @@ def test_rerunning_pipeline_does_not_duplicate_raw_items(mock_classify):
     assert len(second_run) == 0
 
 
-@patch("ai_news_radar.pipeline.classify")
+@patch("ai_news.pipeline.classify")
 def test_notifier_called_only_for_verified_developments(mock_classify):
     mock_classify.return_value = ClassificationResult(
         technical_impact_score=80, hype_score=40, applicability_score=60,
@@ -122,12 +122,12 @@ def test_rolled_back_source_does_not_report_phantom_developments():
 
     session = make_session()
     results = []
-    from ai_news_radar.pipeline import process
+    from ai_news.pipeline import process
     def fail_second(session, raw):
         if raw.external_id == "two":
             raise RuntimeError("classification failed after first development")
         return process(session, raw)
-    with patch("ai_news_radar.pipeline.process", side_effect=fail_second):
+    with patch("ai_news.pipeline.process", side_effect=fail_second):
         developments = run_pipeline(session, [FailingSource(), FakeSocialConnector()], on_source_result=lambda name, ok: results.append((name, ok)))
     assert len(developments) == 1
     assert developments[0].raw_item.external_id == "post-1"
@@ -135,8 +135,8 @@ def test_rolled_back_source_does_not_report_phantom_developments():
 
 
 def test_existing_item_gets_missing_source_date_without_duplicate_processing():
-    from ai_news_radar.models import RawItem
-    from ai_news_radar.pipeline import ingest
+    from ai_news.models import RawItem
+    from ai_news.pipeline import ingest
     session = make_session()
     connector = FakeSocialConnector()
     run_pipeline(session, [connector])

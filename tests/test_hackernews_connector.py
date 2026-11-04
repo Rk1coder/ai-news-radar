@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-from ai_news_radar.ingestion.hackernews import HackerNewsConnector
+from ai_news.ingestion.hackernews import HackerNewsConnector
 
 SAMPLE_RESPONSE = {
     "hits": [
@@ -25,7 +25,7 @@ SAMPLE_RESPONSE = {
 }
 
 
-@patch("ai_news_radar.ingestion.hackernews.requests.get")
+@patch("ai_news.ingestion.hackernews.requests.get")
 def test_fetch_parses_hits(mock_get):
     mock_response = MagicMock()
     mock_response.json.return_value = SAMPLE_RESPONSE

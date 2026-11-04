@@ -23,7 +23,7 @@ def test_switch_preserves_remote_and_secrets_and_is_idempotent(setup_module, tmp
     assert first['PREVIOUS_DATABASE_URL'] == 'postgresql://old:secret@remote/db'
     assert first['ANTHROPIC_API_KEY'] == 'keep'
     assert first['COMPOSE_PROFILES'] == 'custom,proton'
-    assert '@postgres:5432/radar' in first['DATABASE_URL']
+    assert '@postgres:5432/ainews' in first['DATABASE_URL']
     assert len(first['POSTGRES_PASSWORD']) >= 32
     assert path.stat().st_mode & 0o777 == 0o600
     setup_module.configure(path)

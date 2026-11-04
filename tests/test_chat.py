@@ -5,8 +5,8 @@ import requests
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from ai_news_radar.classification.chat import answer_question
-from ai_news_radar.models import Base, Development, RawItem, Source
+from ai_news.classification.chat import answer_question
+from ai_news.models import Base, Development, RawItem, Source
 
 
 def make_development(verified=True):
@@ -35,8 +35,8 @@ def make_development(verified=True):
     return session, dev
 
 
-@patch("ai_news_radar.classification.chat.requests.get")
-@patch("ai_news_radar.classification.chat.Anthropic")
+@patch("ai_news.classification.chat.requests.get")
+@patch("ai_news.classification.chat.Anthropic")
 def test_answer_question_grounds_in_context(mock_anthropic, mock_get):
     mock_get.side_effect = requests.ConnectionError("fetch disabled for test")
     mock_client = MagicMock()
@@ -54,8 +54,8 @@ def test_answer_question_grounds_in_context(mock_anthropic, mock_get):
     assert "Onemli bir katki" in context_message
 
 
-@patch("ai_news_radar.classification.chat.requests.get")
-@patch("ai_news_radar.classification.chat.Anthropic")
+@patch("ai_news.classification.chat.requests.get")
+@patch("ai_news.classification.chat.Anthropic")
 def test_answer_question_passes_history(mock_anthropic, mock_get):
     mock_get.side_effect = requests.ConnectionError("fetch disabled for test")
     mock_client = MagicMock()
